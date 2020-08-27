@@ -1,2 +1,2 @@
-# Markus_Torch
-Spiking Neural Network Library based on  pytorch 1.4
+# Markus
+Spiking Neural Network Library
