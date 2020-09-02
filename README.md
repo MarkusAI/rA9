@@ -1,2 +1,2 @@
-# Markus
-Spiking Neural Network Library
+# RA9
+Prototype of Spiking Neural Network Library
