@@ -1,2 +1,7 @@
 # rA9
-Prototype of Spiking Neural Network Library
+
+
+Spiking Neural Network Library Based on JAX(https://github.com/google/jax)
+
+
+KEEP WORKING NOW 
