@@ -1,6 +1,8 @@
 import jax.numpy as jnp
-import numpy.random as random
-from jax.ops import index, index_update
+import jax.random as random
+from jax.ops import index, index_update, index_add
+
+key_x = random.PRNGKey(0)
 
 def poisson_encoding(intensities, duration, dt):
     assert jnp.all(intensities >= 0), "Inputs must be non-negative"
@@ -19,17 +21,18 @@ def poisson_encoding(intensities, duration, dt):
 
     # Create Poisson distribution and sample inter-spike intervals
     # (incrementing by 1 to avoid zero intervals).
-    #have to adapt this part to only jax, not numpy.
-    intervals = random.poisson(lam=rate, size=(time + 1, len(rate))).astype(jnp.float32)
-    intervals[:, intensities != 0] += (intervals[:, intensities != 0] == 0).astype(jnp.float32)
+    # have to adapt this part to only jax, not numpy.
+    intervals_p = random.poisson(key= key_x, lam=rate, shape=(time + 1, len(rate))).astype(jnp.float32)
+    intervals = index_add(intervals_p, index[:, intensities != 0],
+                          (intervals_p[:, intensities != 0] == 0).astype(jnp.float32))
 
     # Calculate spike times by cumulatively summing over time dimension.
     times_p = jnp.cumsum(intervals, dtype=float)
-    times_p= times_p.reshape((-1, size))
-    times = index_update(times_p, times_p >= time+1, 0).astype(jnp.int32)
+    times_p = times_p.reshape((-1, size))
+    times = index_update(times_p, times_p >= time + 1, 0).astype(jnp.int32)
 
     # Create tensor of spikes.
-    spike = jnp.zeros((time+1, size), dtype=bool)
+    spike = jnp.zeros((time + 1, size), dtype=bool)
     spikes = index_update(spike, index[times, jnp.arange(size)], 1)
     spikes = spikes[1:]
     spikes = jnp.moveaxis(spikes, 1, 0)
