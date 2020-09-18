@@ -20,13 +20,13 @@ def poisson_encoding(intensities, duration, dt):
     # Create Poisson distribution and sample inter-spike intervals
     # (incrementing by 1 to avoid zero intervals).
     #have to adapt this part to only jax, not numpy.
-    intervals = random.poisson(lam=rate, size=(time + 1, len(rate))).astype(float)
-    intervals[:, intensities != 0] += (intervals[:, intensities != 0] == 0).astype('float')
+    intervals = random.poisson(lam=rate, size=(time + 1, len(rate))).astype(jnp.float32)
+    intervals[:, intensities != 0] += (intervals[:, intensities != 0] == 0).astype(jnp.float32)
 
     # Calculate spike times by cumulatively summing over time dimension.
     times_p = jnp.cumsum(intervals, dtype=float)
     times_p= times_p.reshape((-1, size))
-    times = index_update(times_p, times_p >= time+1, 0).astype('int64')
+    times = index_update(times_p, times_p >= time+1, 0).astype(jnp.int32)
 
     # Create tensor of spikes.
     spike = jnp.zeros((time+1, size), dtype=bool)
