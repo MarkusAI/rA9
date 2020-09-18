@@ -21,7 +21,6 @@ def poisson_encoding(intensities, duration, dt):
 
     # Create Poisson distribution and sample inter-spike intervals
     # (incrementing by 1 to avoid zero intervals).
-    # have to adapt this part to only jax, not numpy.
     intervals_p = random.poisson(key= key_x, lam=rate, shape=(time + 1, len(rate))).astype(jnp.float32)
     intervals = index_add(intervals_p, index[:, intensities != 0],
                           (intervals_p[:, intensities != 0] == 0).astype(jnp.float32))
