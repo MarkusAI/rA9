@@ -1,38 +1,39 @@
 import jax.numpy as jnp
-import jax 
+import numpy.random as random
+from jax.ops import index, index_update
 
 def poisson_encoding(intensities, duration, dt):
-    assert (intensities >= 0).all(), "Inputs must be non-negative."
-    assert intensities.dtype == jnp.float, "Intensities must be of type Float."
+    assert jnp.all(intensities >= 0), "Inputs must be non-negative"
+    assert intensities.dtype == jnp.float32 or intensities.dtype == jnp.float64, "Intensities must be of type Float."
 
     # Get shape and size of data.
-    shape, size = intensities.shape, intensities.numel()
-    intensities = intensities.view(-1)
-    time = int(duration / dt)
+    shape, size = jnp.shape(intensities), jnp.size(intensities)
+    intensities = intensities.reshape(-1)
+    time = duration // dt
 
     # Compute firing rates in seconds as function of data intensity,
     # accounting for simulation time step.
-    rate = jnp.zeros(size)
+    rate_p = jnp.zeros(size)
     non_zero = intensities != 0
-    rate[non_zero] = 1 / intensities[non_zero] * (1000 / dt)
+    rate = index_update(rate_p, index[non_zero], 1 / intensities[non_zero] * (1000 / dt))
 
     # Create Poisson distribution and sample inter-spike intervals
     # (incrementing by 1 to avoid zero intervals).
-    dist = jax.random.poisson(lam=rate)
-    intervals = dist.sample(sample_shape=jnp.shape([time + 1]))
-    intervals[:, intensities != 0] += (intervals[:, intensities != 0] == 0).float()
+    #have to adapt this part to only jax, not numpy.
+    intervals = random.poisson(lam=rate, size=(time + 1, len(rate))).astype(float)
+    intervals[:, intensities != 0] += (intervals[:, intensities != 0] == 0).astype('float')
 
     # Calculate spike times by cumulatively summing over time dimension.
-    times = jnp.cumsum(intervals, dim=0).long()
-    times[times >= time + 1] = 0
+    times_p = jnp.cumsum(intervals, dtype=float)
+    times_p= times_p.reshape((-1, size))
+    times = index_update(times_p, times_p >= time+1, 0).astype('int64')
 
     # Create tensor of spikes.
-    spikes = jnp.zeros(time + 1, size).bool()
-    spikes[times, jnp.arange(size)] = 1
+    spike = jnp.zeros((time+1, size), dtype=bool)
+    spikes = index_update(spike, index[times, jnp.arange(size)], 1)
     spikes = spikes[1:]
-    spikes = jnp.moveaxis(spikes,1, 0)
-
-    return spikes.view(*shape, time)
+    spikes = jnp.moveaxis(spikes, 1, 0)
+    return spikes.reshape(*shape, time)
 
 
 class PoissonEncoder:
@@ -45,4 +46,6 @@ class PoissonEncoder:
         return poisson_encoding(intensities, self.duration, self.dt)
 
 
-#Implement the code from PySNN (https://github.com/BasBuller/PySNN/blob/master/pysnn/encoding.py) to JAX(https://github.com/google/jax)
+# Implemented from PySNN Poisson Encoding & Bindsnet Poisson encoding
+# https://github.com/BasBuller/PySNN
+# https://github.com/Hananel-Hazan/bindsnet
