@@ -4,20 +4,18 @@ from jax.ops import index, index_add
 
 class LIF(object):
     # tau => Time Constant; Capacity * Resistance
-    # Vmem => Rest Voltage
 
-    def __init__(self, tau_m, Vmem, Vth, dt):
+    def __init__(self, tau_m, Vth, dt):
         self.tau_m = tau_m
-        self.Vmem = Vmem
         self.Vth = Vth
         self.dt = dt
 
     def forward(self, x, v_current):
-        dV_tau = jnp.divide(jnp.subtract(x, self.Vmem), self.dt)
-        dV = jnp.divide(dV_tau, self.tau)
+        dV_tau = jnp.multiply(jnp.subtract(x, v_current), self.dt)
+        dV = jnp.divide(dV_tau, self.tau_m)
         v_current = index_add(v_current, index[:], dV)
-        spike_list = jnp.greater_equal(v_current, self.Vmem).astype(int)
-        v_current = jnp.where(v_current >= self.Vth, self.Vmem, v_current * jnp.exp(-1 / self.tau_m))
+        spike_list = jnp.greater_equal(v_current, self.Vth).astype(int)
+        v_current = jnp.where(v_current >= self.Vth, 0, v_current * jnp.exp(-1 / self.tau_m))
 
         return spike_list, v_current
 
