@@ -21,7 +21,7 @@ class LIF(object):
 
     def backward(self, time, spike_list, weights, e_gradient):
         gamma = spike_list[0]
-        t_Tk_divby_tau_m = jnp.divide(jnp.subtract(time, spike_list[1]), self.tau_m)
+        t_Tk_divby_tau_m = jnp.divide(jnp.subtract(time, spike_list[1]), -self.tau_m)
         f_prime_t = jnp.multiply(jnp.exp(t_Tk_divby_tau_m), (-1 / self.tau_m))
         aLIFnet = jnp.multiply(1 / self.Vth, (1 + jnp.multiply(jnp.divide(1, gamma), f_prime_t)))
         d_w = jnp.matmul(weights, e_gradient)
