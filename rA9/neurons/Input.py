@@ -41,8 +41,8 @@ class Input(object):
         spike = jnp.zeros((time + 1, size), dtype=bool)
         spikes = index_update(spike, index[times, jnp.arange(size)], 1)
         spikes = spikes[1:]
-        print(spikes.reshape(time,*shape))
-        return spikes.reshape(*shape, time)
+        return spikes.reshape(time, *shape)
+
 
 
 
