@@ -5,8 +5,8 @@ from jax.ops import index, index_update, index_add
 
 class Input(object):
     def __init__(self, duration, dt, key=0):
-        self.duration = duration
         self.dt = dt
+        self.duration = duration
         self.key_x = random.PRNGKey(key)
 
     def forward(self, intensities):
