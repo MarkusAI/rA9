@@ -40,7 +40,7 @@ def conv_forward(X, W, b, stride=1, padding=0):
     w_out = (w_x - w_filter + 2 * padding) / stride + 1
 
     if not h_out.is_integer() or not w_out.is_integer():
-        raise Exception('Invalid output dimension!')
+        raise Exception('Invalid output dimension!')#오류 체크
 
     h_out, w_out = int(h_out), int(w_out)
 

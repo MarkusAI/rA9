@@ -30,7 +30,7 @@ class BackwardFunction(object):
     _is_legacy = False
 
     def apply(self, *args):
-        return self._forward_cls.backward(self, *args)
+        return backward(self,*args)
 
 
 class FunctionMeta(type):

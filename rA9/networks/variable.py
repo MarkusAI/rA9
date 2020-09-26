@@ -57,11 +57,11 @@ class Variable(object):
         if not self.requires_grad:
             return None
 
-    def backward(self):
+    '''  def backward(self):
         if self.size > 1:
             raise RuntimeError("grad can be implicitly created only for scalar outputs")
 
-        backward(self)
+        backward(self)''' # functions 단계로 이동
 
     def _add(self, other):
         if isinstance(other, Variable):
