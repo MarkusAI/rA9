@@ -1,6 +1,36 @@
-from .module import Module
-from ._functions import *
+import math
 
+from ..networks.module import Module
+import jax.numpy as jnp
+from ..networks.module import Module
+from ..synapses.img2col import *
+
+from jax import vjp
+from jax import jit, wraps, lu
+
+from jax.api import _argnums_partial, _check_scalar
+
+
+# 함수 정의
+def elementwise_grad(function, x, initial_gradient=None):
+    gradient_function = grad(function, initial_gradient, x)
+    return gradient_function
+
+
+def grad(fun, initial_grad=None, argnums=0):
+    value_and_grad_f = value_and_grad(fun, initial_grad, argnums)
+
+    docstr = ("Gradient of {fun} with respect to positional argument(s) "
+              "{argnums}. Takes the same arguments as {fun} but returns the "
+              "gradient, which has the same shape as the arguments at "
+              "positions {argnums}.")
+
+    @wraps(fun, docstr=docstr, argnums=argnums)
+    def grad_f(*args, **kwargs):
+        ans, g = value_and_grad_f(*args, **kwargs)
+        return g
+
+    return grad_f
 
 class Dropout(Module):
 
@@ -12,10 +42,25 @@ class Dropout(Module):
         self.p = p
 
     def forward(self, input):
-        return dropout.apply(input, self.p, self.training)
+        def jnp_fn(input_jnp, noise):
+            return input_jnp * noise
 
-    def __repr__(self):
-        inplace_str = ', inplace' if self.inplace else ''
-        return self.__class__.__name__ + ' (' \
-               + 'p = ' + str(self.p) \
-               + inplace_str + ')'
+        noise = jnp.random.binomial(1, self.p, size=input.shape)
+        if not train:
+            noise.fill(1)
+        if p == 1:
+            noise.fill(0)
+        self.jnp_args = (input, noise)
+        out= jnp_fn(*self.jnp_args)
+        return out
+
+    def backward(self, grad_ouputs):
+        jnp_fn = jnp_fn
+        jnp_args = self.jnp_args
+        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+
+        jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
+        grads = jnp_grad_fn(*jnp_args)
+        return grads
+
+

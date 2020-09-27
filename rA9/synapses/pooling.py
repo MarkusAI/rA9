@@ -31,36 +31,19 @@ def grad(fun, initial_grad=None, argnums=0):
     return grad_f
 
 
-class Linear(Module):
-    def __init__(self, in_features, out_features, bias=True):
-        super(Linear, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.weight = jnp.zeros((out_features, in_features))
-        if bias:
-            self.bias = jnp.zeros((out_features))
-        else:
-            self.register_parameter('bias', None)
-        self.reset_parameters()
+class Max_pool2d(Module):
+    def __init__(self, input, kernel_size, stride):
+        super(Max_pool2d, self).__init__()
+        self.input = input
+        self.kernel_size = kernel_size
+        self.stride = stride
 
-    def reset_parameters(self):
-        size = self.weight.data.shape
-        stdv = 1. / math.sqrt(size[1])
-        self.weight = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
-        if self.bias is not None:
-            self.bias = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+    def forward(self, input, kernel_size):
+        def jnp_fn(input_jnp, kernel_size):
+            return _pool_forward(input_jnp, kernel_size,stride)
 
-    def forward(self, input):
-        def jnp_fn(input_jnp, weights_jnp, bias):
-            out = jnp.matmul(input_jnp, weights_jnp.T)
-
-            if bias is None:
-                return out
-            else:
-                return out + bias
-
-        jnp_args = (input, self.weight, None if self.bias is None else self.bias)
-        out = jnp_fn(*jnp_args)
+        self.jnp_args = (input, kernel_size)
+        out = jnp_fn(*self.jnp_args)
         return out
 
     def backward(self, grad_outputs):
@@ -71,3 +54,25 @@ class Linear(Module):
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)
         return grads
+
+
+def _pool_forward(X, size=2, stride=2):
+    n, d, h, w = X.shape
+    h_out = (h - size) / stride + 1
+    w_out = (w - size) / stride + 1
+
+    if not w_out.is_integer() or not h_out.is_integer():
+        raise Exception('Invalid output dimension!')
+
+    h_out, w_out = int(h_out), int(w_out)
+
+    X_reshaped = X.reshape(n * d, 1, h, w)
+    X_col = im2col_indices(X_reshaped, size, size, padding=0, stride=stride)
+
+    max_idx = jnp.argmax(X_col, axis=0)
+    out = jnp.array(X_col[max_idx, range(max_idx.size)])
+
+    out = out.reshape(h_out, w_out, n, d)
+    out = jnp.transpose(out, (2, 3, 0, 1))
+
+    return out
