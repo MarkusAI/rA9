@@ -1,6 +1,5 @@
 import math
 
-from ..networks.module import Module
 import jax.numpy as jnp
 
 from jax import vjp
@@ -31,7 +30,7 @@ def grad(fun, initial_grad=None, argnums=0):
     return grad_f
 
 
-class Max_pool2d(Module):
+class Max_pool2d(object):
     def __init__(self, input, kernel_size, stride):
         super(Max_pool2d, self).__init__()
         self.input = input

@@ -1,5 +1,4 @@
 import jax.numpy as jnp
-from ..networks.module import Module
 from ..synapses.img2col import *
 
 from jax import vjp
@@ -51,7 +50,7 @@ def value_and_grad(fun, initial_grad=None, argnums=0):
 
 
 # 대가리 깨져도 elementgradient
-class Conv2d(Module):
+class Conv2d(object):
 
     def __init__(self, input_channels, output_channels, kernel_size, stride=1, padding=0):
         super(Conv2d, self).__init__()

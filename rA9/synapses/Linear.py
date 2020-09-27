@@ -1,6 +1,5 @@
 import math
 
-from ..networks.module import Module
 import jax.numpy as jnp
 
 from jax import vjp
@@ -31,16 +30,12 @@ def grad(fun, initial_grad=None, argnums=0):
     return grad_f
 
 
-class Linear(Module):
-    def __init__(self, in_features, out_features, bias=True):
+class Linear(object):
+    def __init__(self, in_features, out_features):
         super(Linear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.weight = jnp.zeros((out_features, in_features))
-        if bias:
-            self.bias = jnp.zeros((out_features))
-        else:
-            self.register_parameter('bias', None)
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -51,13 +46,10 @@ class Linear(Module):
             self.bias = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
 
     def forward(self, input):
-        def jnp_fn(input_jnp, weights_jnp, bias):
-            out = jnp.matmul(input_jnp, weights_jnp.T)
+        def jnp_fn(input_jnp, weights_jnp):
+            out = jnp.matmul(input_jnp, weights_jnp.T)#T
 
-            if bias is None:
-                return out
-            else:
-                return out + bias
+            return out
 
         jnp_args = (input, self.weight, None if self.bias is None else self.bias)
         out = jnp_fn(*jnp_args)

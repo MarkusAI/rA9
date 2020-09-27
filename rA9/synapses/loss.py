@@ -1,5 +1,4 @@
-from ..networks.function import Function
-from ..networks.variable import Variable
+
 from ..synapses.img2col import *
 
 import jax.numpy as jnp
