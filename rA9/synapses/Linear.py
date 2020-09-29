@@ -1,6 +1,7 @@
 import math
 
 import jax.numpy as jnp
+from ..networks.module import Module
 
 from jax import vjp
 from jax import jit, wraps, lu
@@ -30,7 +31,7 @@ def grad(fun, initial_grad=None, argnums=0):
     return grad_f
 
 
-class Linear(object):
+class Linear(Module):
     def __init__(self, in_features, out_features):
         super(Linear, self).__init__()
         self.in_features = in_features

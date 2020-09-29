@@ -2,6 +2,7 @@ import math
 
 import jax.numpy as jnp
 from ..synapses.img2col import *
+from ..networks.module import Module
 
 from jax import vjp
 from jax import jit, wraps, lu
@@ -30,7 +31,7 @@ def grad(fun, initial_grad=None, argnums=0):
 
     return grad_f
 
-class Dropout(object):
+class Dropout(Module):
 
     def __init__(self, p=0.5):
         super(Dropout, self).__init__()

@@ -4,7 +4,7 @@ import jax.numpy as jnp
 
 from jax import vjp
 from jax import jit, wraps, lu
-
+from ..networks.module import Module
 from jax.api import _argnums_partial, _check_scalar
 
 
@@ -30,7 +30,7 @@ def grad(fun, initial_grad=None, argnums=0):
     return grad_f
 
 
-class Max_pool2d(object):
+class Max_pool2d(Module):
     def __init__(self, input, kernel_size, stride):
         super(Max_pool2d, self).__init__()
         self.input = input
