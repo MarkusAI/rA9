@@ -13,12 +13,10 @@ class Module(object):
         raise NotImplementedError
 
     def register_parameter(self, name, param):
-        if '_parameters' not in self.__dict__:
-            raise AttributeError("cannot assign parameter before Module.__init__() call")
         if param is None:
-            self.array[name] = None
+            self._parameters[name] = None
         else:
-            self.array[name] = param
+            self._parameters[name] = param
 
     def add_module(self, name, module):
         if hasattr(self, name):
@@ -31,7 +29,7 @@ class Module(object):
         for module in self.children():
             module._apply(fn)
 
-        for param in self.array:
+        for param in self.array:#검증 A
             if param is not None:
                 param = fn(param)
         for key, buf in self._buffers.items():

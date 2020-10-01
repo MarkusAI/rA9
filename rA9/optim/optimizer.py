@@ -48,18 +48,5 @@ class Optimizer(object):
     def __setstate__(self, state):
         self.__dict__.update(state)
 
-
-    def zero_grad(self):
-        for group in self.param_groups:
-            for p in group['params']:
-                if p.grad is not None:
-                    p.grad.fill(0)
-
     def step(self, closure):
-        """Performs a single optimization step (parameter update).
-
-        Arguments:
-            closure (callable): A closure that reevaluates the model and
-                returns the loss. Optional for most optimizers.
-        """
         raise NotImplementedError
