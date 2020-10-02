@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from ..parameter import Parameter
+
 
 
 class Module(object):
