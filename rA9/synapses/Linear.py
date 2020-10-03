@@ -1,12 +1,11 @@
-import math
-
-import jax.numpy as jnp
-from ..networks.module import Module
-
+from rA9.synapses.img2col import *
+from rA9.networks.module import Module
 from jax import vjp
-from jax import jit, wraps, lu
-
-from jax.api import _argnums_partial, _check_scalar
+from jax import linear_util as lu
+import jax
+from functools import wraps
+from jax.api import argnums_partial
+import math
 
 
 # 함수 정의
@@ -16,7 +15,7 @@ def elementwise_grad(function, x, initial_gradient=None):
 
 
 def grad(fun, initial_grad=None, argnums=0):
-    value_and_grad_f = value_and_grad(fun, initial_grad, argnums)
+    value_and_grad_f =  value_and_grad(fun, initial_grad, argnums)
 
     docstr = ("Gradient of {fun} with respect to positional argument(s) "
               "{argnums}. Takes the same arguments as {fun} but returns the "
@@ -30,6 +29,25 @@ def grad(fun, initial_grad=None, argnums=0):
 
     return grad_f
 
+
+def value_and_grad(fun, initial_grad=None, argnums=0):
+    docstr = ("Value and gradient of {fun} with respect to positional "
+              "argument(s) {argnums}. Takes the same arguments as {fun} but "
+              "returns a two-element tuple where the first element is the value "
+              "of {fun} and the second element is the gradient, which has the "
+              "same shape as the arguments at positions {argnums}.")
+
+    @wraps(fun, docstr=docstr, argnums=argnums)
+    def value_and_grad_f(*args, **kwargs):
+        f = lu.wrap_init(fun, kwargs)
+        f_partial, dyn_args = argnums_partial(f, argnums, args)
+        ans, vjp_py = vjp(f_partial, *dyn_args)
+
+        g = vjp_py(jnp.ones((), jnp.result_type(ans)) if initial_grad is None else initial_grad)
+        g = g[0] if isinstance(argnums, int) else g
+        return (ans, g)
+
+    return value_and_grad_f
 
 class Linear(Module):
     def __init__(self, in_features, out_features):

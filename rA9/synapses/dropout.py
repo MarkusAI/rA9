@@ -1,13 +1,11 @@
-import math
-
-import jax.numpy as jnp
-from ..synapses.img2col import *
-from ..networks.module import Module
-
+from rA9.synapses.img2col import *
+from rA9.networks.module import Module
 from jax import vjp
-from jax import jit, wraps, lu
+from jax import linear_util as lu
+import jax
+from functools import wraps
+from jax.api import argnums_partial
 
-from jax.api import _argnums_partial, _check_scalar
 
 
 # 함수 정의

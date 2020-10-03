@@ -1,5 +1,4 @@
 
-from ..synapses.img2col import *
 
 import jax.numpy as jnp
 import jax.scipy.signal as signal
@@ -23,8 +22,8 @@ class CrossEntropy():
             else:
                 return -jnp.sum(ll)
 
-        self.jnp_args = (input, target, size_average)
-        out = jnp_fn(*self.jnp_args)
+        jnp_args = (input, target, size_average)
+        out = jnp_fn(*jnp_args)
         return out
 
 
@@ -39,6 +38,6 @@ class MSELoss():
             else:
                 return jnp.sum((input_jnp - target_jnp) ** 2)
 
-        self.jnp_args = (input, target, size_average)
-        out = jnp_fn(*self.jnp_args)
+        jnp_args = (input, target, size_average)
+        out = jnp_fn(*jnp_args)
         return out

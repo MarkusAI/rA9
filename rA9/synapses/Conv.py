@@ -1,12 +1,12 @@
 import jax.numpy as jnp
-from ..synapses.img2col import *
-
-from ..networks.module import Module
+from rA9.synapses.img2col import *
+from rA9.networks.module import Module
 from jax import vjp
-from jax import jit, wraps, lu
-
-from jax.api import _argnums_partial, _check_scalar
-
+from jax import linear_util as lu
+import jax
+from functools import wraps
+from jax.api import argnums_partial
+import math
 
 # 함수 정의
 def elementwise_grad(function, x, initial_gradient=None):
@@ -40,10 +40,10 @@ def value_and_grad(fun, initial_grad=None, argnums=0):
     @wraps(fun, docstr=docstr, argnums=argnums)
     def value_and_grad_f(*args, **kwargs):
         f = lu.wrap_init(fun, kwargs)
-        f_partial, dyn_args = _argnums_partial(f, argnums, args)
+        f_partial, dyn_args = argnums_partial(f, argnums, args)
         ans, vjp_py = vjp(f_partial, *dyn_args)
 
-        g = vjp_py(onp.ones((), onp.result_type(ans)) if initial_grad is None else initial_grad)
+        g = vjp_py(jnp.ones((), jnp.result_type(ans)) if initial_grad is None else initial_grad)
         g = g[0] if isinstance(argnums, int) else g
         return (ans, g)
 
@@ -61,9 +61,9 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-        self.weight = jnp.zeros((self.out_channels, in_channels) + self.kernel_size)
+        self.weight = jnp.zeros((self.out_channels, input_channels) + self.kernel_size)
 
-        self.bias = jnp.zeros((out_channels, 1))
+        self.bias = jnp.zeros((output_channels, 1))
 
         self.reset_parameters()
 
