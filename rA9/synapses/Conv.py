@@ -5,7 +5,7 @@ import jax
 import jax.numpy as jnp
 from jax import jit
 from jax import linear_util as lu
-from jax import random, vjp
+from jax import random, value_and_grad, vjp
 from jax.api import _check_scalar, argnums_partial
 
 from ..networks.module import Module
@@ -107,15 +107,12 @@ class Conv2d(Module):
 
             out = jnp.matmul(W_col, X_col)
 
-            if b is not None:
-                out += b
+            if bias is not None:
+                out += bias
             out = out.reshape(n_filters, h_out, w_out, n_x)
             out = jnp.transpose(out, (3, 0, 1, 2))
 
-            if bias is None:
-                return out
-            else:
-                return out
+            return out
 
         self.jnp_args = (input, self.weights,
                          None if self.bias is None else self.bias)

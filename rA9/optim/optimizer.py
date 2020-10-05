@@ -33,8 +33,6 @@ class Optimizer(object):
                 else:
                     group.setdefault(name, default)
 
-
-
     def __getstate__(self):
         return {
             'state': self.state,
