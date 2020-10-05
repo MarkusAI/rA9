@@ -1,11 +1,12 @@
-import jax.numpy as jnp
+import math
+import numpy as jnp
 from ..synapses.img2col import *
 
 from ..networks.module import Module
-from jax import vjp
-from jax import jit, wraps, lu
+from jax import random, vjp, jit, linear_util as lu
+from functools import wraps
 
-from jax.api import _argnums_partial, _check_scalar
+from jax.api import argnums_partial, _check_scalar
 
 
 # 함수 정의
@@ -40,7 +41,7 @@ def value_and_grad(fun, initial_grad=None, argnums=0):
     @wraps(fun, docstr=docstr, argnums=argnums)
     def value_and_grad_f(*args, **kwargs):
         f = lu.wrap_init(fun, kwargs)
-        f_partial, dyn_args = _argnums_partial(f, argnums, args)
+        f_partial, dyn_args = argnums_partial(f, argnums, args)
         ans, vjp_py = vjp(f_partial, *dyn_args)
 
         g = vjp_py(onp.ones((), onp.result_type(ans)) if initial_grad is None else initial_grad)
@@ -61,9 +62,9 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-        self.weight = jnp.zeros((self.out_channels, in_channels) + self.kernel_size)
+        self.weight = jnp.zeros((self.output_channels, self.input_channels) + self.kernel_size)
 
-        self.bias = jnp.zeros((out_channels, 1))
+        self.bias = jnp.zeros((self.output_channels, 1))
 
         self.reset_parameters()
 
@@ -73,11 +74,12 @@ class Conv2d(Module):
             n *= k
         stdv = 1. / math.sqrt(n)
 
-        keyW = jax.random.PRNGKey(0)
-        keyB = jax.random.PRNGKey(0)
-        self.weight = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
+        keyW = random.PRNGKey(0)
+        keyB = random.PRNGKey(0)
+
+        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
         if self.bias is not None:
-            self.bias = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+            self.bias = random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
 
     def forward(self, input):
 

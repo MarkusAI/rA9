@@ -2,7 +2,6 @@ import rA9.networks as nn
 import rA9.synapses as synapse
 import rA9.neurons as neuron
 
-
 class SCNN(nn.module):
 
     def __init__(self):
@@ -18,7 +17,7 @@ class SCNN(nn.module):
 
     def forward(self, x):
         x = synapse.Max_pool2d(self.conv1(x),2)
-        x=self.SNN_IN(x)
+        x = self.SNN_IN(x)
         x = self.LIF(x)
         x = self.SNN_OUT(x)
         x = synapse.Max_pool2d(self.conv2(x), 2)
@@ -27,4 +26,5 @@ class SCNN(nn.module):
         x = self.SNN_OUT2(x)
 
         return x
-model= SCNN()
+
+model = SCNN()

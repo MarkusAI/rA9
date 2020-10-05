@@ -44,40 +44,44 @@ class Module(object):
 
         return result
 
-    def __getattr__(self, name):
-        if '_parameters' in self.__dict__:
-            _parameters = self.__dict__['_parameters']
-            if name in _parameters:
-                return _parameters[name]
-        if '_buffers' in self.__dict__:
-            _buffers = self.__dict__['_buffers']
-            if name in _buffers:
-                return _buffers[name]
-        if '_modules' in self.__dict__:
-            modules = self.__dict__['_modules']
-            if name in modules:
-                return modules[name]
-        raise AttributeError("'{}' object has no attribute '{}'".format(
-            type(self).__name__, name))
+    # TODO: override without breaking default behavior
+    # https://stackoverflow.com/questions/2405590/how-do-i-override-getattr-in-python-without-breaking-the-default-behavior
 
-    def __setattr__(self, name, value):
+    # def __getattr__(self, name):
+    #     print(self.__dict__)
+    #     print(self._parameters)
+    #     if '_parameters' in self.__dict__:
+    #         _parameters = self.__dict__['_parameters']
+    #         if name in _parameters:
+    #             return _parameters[name]
+    #     if '_buffers' in self.__dict__:
+    #         _buffers = self.__dict__['_buffers']
+    #         if name in _buffers:
+    #             return _buffers[name]
+    #     if '_modules' in self.__dict__:
+    #         modules = self.__dict__['_modules']
+    #         if name in modules:
+    #             return modules[name]
+    #     raise AttributeError("'{}' object has no attribute '{}'".format(
+    #         type(self).__name__, name))
 
-        if params is not None:
-            self.register_parameter(name, value)
-        else:
-            modules = self.__dict__.get('_modules')
-            if isinstance(value, Module):
-                if modules is None:
-                    raise AttributeError("cannot assign module before Module.__init__() call")
-                modules[name] = value
-            elif modules is not None and name in modules:
-                modules[name] = value
-            else:
-                buffers = self.__dict__.get('_buffers')
-                if buffers is not None and name in buffers:
-                    buffers[name] = value
-                else:
-                    object.__setattr__(self, name, value)
+    # def __setattr__(self, name, value):
+    #     if params is not None:
+    #         self.register_parameter(name, value)
+    #     else:
+    #         modules = self.__dict__.get('_modules')
+    #         if isinstance(value, Module):
+    #             if modules is None:
+    #                 raise AttributeError("cannot assign module before Module.__init__() call")
+    #             modules[name] = value
+    #         elif modules is not None and name in modules:
+    #             modules[name] = value
+    #         else:
+    #             buffers = self.__dict__.get('_buffers')
+    #             if buffers is not None and name in buffers:
+    #                 buffers[name] = value
+    #             else:
+    #                 object.__setattr__(self, name, value)
 
     def __delattr__(self, name):
         if name in self._parameters:

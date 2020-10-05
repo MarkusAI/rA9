@@ -2,10 +2,10 @@ import math
 
 import jax.numpy as jnp
 
-from jax import vjp
-from jax import jit, wraps, lu
+from jax import vjp, jit, linear_util as lu
+from functools import wraps
 from ..networks.module import Module
-from jax.api import _argnums_partial, _check_scalar
+from jax.api import _check_scalar
 
 
 # 함수 정의
