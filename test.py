@@ -30,3 +30,5 @@ class SCNN(nn.module):
 
 
 model = SCNN()
+
+print(model.conv1, model.conv2)

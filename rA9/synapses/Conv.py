@@ -67,18 +67,10 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-
-<< << << < HEAD
         self.weight = jnp.zeros(
-            (self.output_channels, self.input_channels) + self.kernel_size)
+            (output_channels, input_channels) + self.kernel_size)
 
         self.bias = jnp.zeros((self.output_channels, 1))
-== == == =
-        self.weight = jnp.zeros(
-            (self.out_channels, input_channels) + self.kernel_size)
-
-        self.bias = jnp.zeros((output_channels, 1))
->>>>>> > 275f8134c07a4e661323af327dddf4dce55dd96e
 
         self.reset_parameters()
 
@@ -91,9 +83,11 @@ class Conv2d(Module):
         keyW = random.PRNGKey(0)
         keyB = random.PRNGKey(0)
 
-        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
+        self.weight = random.uniform(
+            minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
         if self.bias is not None:
-            self.bias = random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+            self.bias = random.uniform(
+                minval=-stdv, maxval=stdv, shape=self.bias.shape, key=keyB)
 
     def forward(self, input):
 
@@ -107,7 +101,8 @@ class Conv2d(Module):
             if not h_out.is_integer() or not w_out.is_integer():
                 raise Exception('Invalid output dimension!')  # 오류 체크
             h_out, w_out = int(h_out), int(w_out)
-            X_col = im2col_indices(input_jnp, h_filter, w_filter, padding=padding, stride=stride)
+            X_col = im2col_indices(input_jnp, h_filter,
+                                   w_filter, padding=padding, stride=stride)
             W_col = weights_jnp.reshape(n_filters, -1)
 
             out = jnp.matmul(W_col, X_col)
@@ -122,18 +117,19 @@ class Conv2d(Module):
             else:
                 return out
 
-        self.jnp_args = (input, self.weights, None if self.bias is None else self.bias)
+        self.jnp_args = (input, self.weights,
+                         None if self.bias is None else self.bias)
 
-        output=jnp_fn(*self.jnp_args)
+        output = jnp_fn(*self.jnp_args)
 
         return output
-
 
     def backward(self, grad_outputs):
 
         jnp_fn = jnp_fn
         jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+        indexes = [index for index, need_grad in enumerate(
+            self.needs_input_grad) if need_grad]
 
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)
