@@ -1,14 +1,18 @@
 import math
+from functools import wraps
 
 import jax.numpy as jnp
-
-from jax import vjp, jit, linear_util as lu
-from functools import wraps
-from ..networks.module import Module
+from jax import jit
+from jax import linear_util as lu
+from jax import vjp
 from jax.api import _check_scalar
 
+from ..networks.module import Module
+from ..synapses.img2col import *
 
 # 함수 정의
+
+
 def elementwise_grad(function, x, initial_gradient=None):
     gradient_function = grad(function, initial_gradient, x)
     return gradient_function
@@ -39,7 +43,7 @@ class Max_pool2d(Module):
 
     def forward(self, input, kernel_size):
         def jnp_fn(input_jnp, kernel_size):
-            return _pool_forward(input_jnp, kernel_size,stride)
+            return _pool_forward(input_jnp, kernel_size, stride)
 
         self.jnp_args = (input, kernel_size)
         out = jnp_fn(*self.jnp_args)
@@ -48,7 +52,8 @@ class Max_pool2d(Module):
     def backward(self, grad_outputs):
         jnp_fn = jnp_fn
         jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+        indexes = [index for index, need_grad in enumerate(
+            self.needs_input_grad) if need_grad]
 
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)

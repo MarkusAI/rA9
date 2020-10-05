@@ -1,15 +1,19 @@
 import math
-import numpy as jnp
-from ..synapses.img2col import *
-
-from ..networks.module import Module
-from jax import random, vjp, jit, linear_util as lu
 from functools import wraps
 
-from jax.api import argnums_partial, _check_scalar
+import jax
+import jax.numpy as jnp
+from jax import jit
+from jax import linear_util as lu
+from jax import random, vjp
+from jax.api import _check_scalar, argnums_partial
 
+from ..networks.module import Module
+from ..synapses.img2col import *
 
 # 함수 정의
+
+
 def elementwise_grad(function, x, initial_gradient=None):
     gradient_function = grad(function, initial_gradient, x)
     return gradient_function
@@ -44,7 +48,8 @@ def value_and_grad(fun, initial_grad=None, argnums=0):
         f_partial, dyn_args = argnums_partial(f, argnums, args)
         ans, vjp_py = vjp(f_partial, *dyn_args)
 
-        g = vjp_py(onp.ones((), onp.result_type(ans)) if initial_grad is None else initial_grad)
+        g = vjp_py(jnp.ones((), jnp.result_type(ans))
+                   if initial_grad is None else initial_grad)
         g = g[0] if isinstance(argnums, int) else g
         return (ans, g)
 
@@ -62,9 +67,18 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-        self.weight = jnp.zeros((self.output_channels, self.input_channels) + self.kernel_size)
+
+<< << << < HEAD
+        self.weight = jnp.zeros(
+            (self.output_channels, self.input_channels) + self.kernel_size)
 
         self.bias = jnp.zeros((self.output_channels, 1))
+== == == =
+        self.weight = jnp.zeros(
+            (self.out_channels, input_channels) + self.kernel_size)
+
+        self.bias = jnp.zeros((output_channels, 1))
+>>>>>> > 275f8134c07a4e661323af327dddf4dce55dd96e
 
         self.reset_parameters()
 
