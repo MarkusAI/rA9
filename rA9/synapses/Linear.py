@@ -1,13 +1,19 @@
 import math
-
-import jax.numpy as jnp
-from ..networks.module import Module
-
-from jax import vjp, jit, linear_util as lu
-from jax.api import _check_scalar
 from functools import wraps
 
+import jax
+import jax.numpy as jnp
+from jax import jit
+from jax import linear_util as lu
+from jax import value_and_grad, vjp
+from jax.api import _check_scalar, argnums_partial
+
+from ..networks.module import Module
+from ..synapses.img2col import *
+
 # 함수 정의
+
+
 def elementwise_grad(function, x, initial_gradient=None):
     gradient_function = grad(function, initial_gradient, x)
     return gradient_function
@@ -40,24 +46,32 @@ class Linear(Module):
     def reset_parameters(self):
         size = self.weight.data.shape
         stdv = 1. / math.sqrt(size[1])
-        self.weight = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
+
+        keyW = jax.random.PRNGKey(0)
+        keyB = jax.random.PRNGKey(0)
+
+        self.weight = jax.random.uniform(
+            minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
         if self.bias is not None:
-            self.bias = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+            self.bias = jax.random.uniform(
+                minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
 
     def forward(self, input):
         def jnp_fn(input_jnp, weights_jnp):
-            out = jnp.matmul(input_jnp, weights_jnp.T)#T
+            out = jnp.matmul(input_jnp, weights_jnp.T)  # T
 
             return out
 
-        jnp_args = (input, self.weight, None if self.bias is None else self.bias)
+        jnp_args = (input, self.weight,
+                    None if self.bias is None else self.bias)
         out = jnp_fn(*jnp_args)
         return out
 
     def backward(self, grad_outputs):
         jnp_fn = jnp_fn
         jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+        indexes = [index for index, need_grad in enumerate(
+            self.needs_input_grad) if need_grad]
 
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)

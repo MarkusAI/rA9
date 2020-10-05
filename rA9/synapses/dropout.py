@@ -1,11 +1,16 @@
 import math
-
-import jax.numpy as jnp
-from ..synapses.img2col import *
-from ..networks.module import Module
-
-from jax import vjp, jit, linear_util as lu
 from functools import wraps
+
+import jax
+import jax.numpy as jnp
+from jax import jit
+from jax import linear_util as lu
+from jax import vjp
+from jax.api import argnums_partial
+
+from ..networks.module import Module
+from ..synapses.img2col import *
+
 
 # 함수 정의
 def elementwise_grad(function, x, initial_gradient=None):
@@ -28,6 +33,7 @@ def grad(fun, initial_grad=None, argnums=0):
 
     return grad_f
 
+
 class Dropout(Module):
 
     def __init__(self, p=0.5):
@@ -47,16 +53,15 @@ class Dropout(Module):
         if p == 1:
             noise.fill(0)
         self.jnp_args = (input, noise)
-        out= jnp_fn(*self.jnp_args)
+        out = jnp_fn(*self.jnp_args)
         return out
 
     def backward(self, grad_ouputs):
         jnp_fn = jnp_fn
         jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+        indexes = [index for index, need_grad in enumerate(
+            self.needs_input_grad) if need_grad]
 
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)
         return grads
-
-

@@ -1,3 +1,3 @@
-from  rA9.neurons.Input import *
-from  rA9.neurons.LIF import *
-from  rA9.neurons.Output import *
+from .Input import *
+from .LIF import *
+from .Output import *

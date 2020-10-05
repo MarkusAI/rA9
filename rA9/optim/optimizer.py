@@ -1,10 +1,6 @@
 from collections import defaultdict
-
-import bintorch
-from copy import deepcopy
 from itertools import chain
-from bintorch.autograd import Variable
-import autograd.numpy as np
+import jax.numpy as jnp
 
 required = object()
 
@@ -36,8 +32,6 @@ class Optimizer(object):
                                      name)
                 else:
                     group.setdefault(name, default)
-
-
 
     def __getstate__(self):
         return {

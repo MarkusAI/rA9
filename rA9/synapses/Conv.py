@@ -1,15 +1,19 @@
 import math
-import numpy as jnp
-from ..synapses.img2col import *
-
-from ..networks.module import Module
-from jax import random, vjp, jit, linear_util as lu
 from functools import wraps
 
-from jax.api import argnums_partial, _check_scalar
+import jax
+import jax.numpy as jnp
+from jax import jit
+from jax import linear_util as lu
+from jax import random, value_and_grad, vjp
+from jax.api import _check_scalar, argnums_partial
 
+from ..networks.module import Module
+from ..synapses.img2col import *
 
 # 함수 정의
+
+
 def elementwise_grad(function, x, initial_gradient=None):
     gradient_function = grad(function, initial_gradient, x)
     return gradient_function
@@ -44,7 +48,8 @@ def value_and_grad(fun, initial_grad=None, argnums=0):
         f_partial, dyn_args = argnums_partial(f, argnums, args)
         ans, vjp_py = vjp(f_partial, *dyn_args)
 
-        g = vjp_py(onp.ones((), onp.result_type(ans)) if initial_grad is None else initial_grad)
+        g = vjp_py(jnp.ones((), jnp.result_type(ans))
+                   if initial_grad is None else initial_grad)
         g = g[0] if isinstance(argnums, int) else g
         return (ans, g)
 
@@ -62,7 +67,8 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-        self.weight = jnp.zeros((self.output_channels, self.input_channels) + self.kernel_size)
+        self.weight = jnp.zeros(
+            (output_channels, input_channels) + self.kernel_size)
 
         self.bias = jnp.zeros((self.output_channels, 1))
 
@@ -77,9 +83,11 @@ class Conv2d(Module):
         keyW = random.PRNGKey(0)
         keyB = random.PRNGKey(0)
 
-        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
+        self.weight = random.uniform(
+            minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
         if self.bias is not None:
-            self.bias = random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+            self.bias = random.uniform(
+                minval=-stdv, maxval=stdv, shape=self.bias.shape, key=keyB)
 
     def forward(self, input):
 
@@ -93,33 +101,32 @@ class Conv2d(Module):
             if not h_out.is_integer() or not w_out.is_integer():
                 raise Exception('Invalid output dimension!')  # 오류 체크
             h_out, w_out = int(h_out), int(w_out)
-            X_col = im2col_indices(input_jnp, h_filter, w_filter, padding=padding, stride=stride)
+            X_col = im2col_indices(input_jnp, h_filter,
+                                   w_filter, padding=padding, stride=stride)
             W_col = weights_jnp.reshape(n_filters, -1)
 
             out = jnp.matmul(W_col, X_col)
 
-            if b is not None:
-                out += b
+            if bias is not None:
+                out += bias
             out = out.reshape(n_filters, h_out, w_out, n_x)
             out = jnp.transpose(out, (3, 0, 1, 2))
 
-            if bias is None:
-                return out
-            else:
-                return out
+            return out
 
-        self.jnp_args = (input, self.weights, None if self.bias is None else self.bias)
+        self.jnp_args = (input, self.weights,
+                         None if self.bias is None else self.bias)
 
-        output=jnp_fn(*self.jnp_args)
+        output = jnp_fn(*self.jnp_args)
 
         return output
-
 
     def backward(self, grad_outputs):
 
         jnp_fn = jnp_fn
         jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
+        indexes = [index for index, need_grad in enumerate(
+            self.needs_input_grad) if need_grad]
 
         jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
         grads = jnp_grad_fn(*jnp_args)
