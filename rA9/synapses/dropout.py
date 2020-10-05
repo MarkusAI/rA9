@@ -4,11 +4,8 @@ import jax.numpy as jnp
 from ..synapses.img2col import *
 from ..networks.module import Module
 
-from jax import vjp
-from jax import jit, wraps, lu
-
-from jax.api import _argnums_partial, _check_scalar
-
+from jax import vjp, jit, linear_util as lu
+from functools import wraps
 
 # 함수 정의
 def elementwise_grad(function, x, initial_gradient=None):
