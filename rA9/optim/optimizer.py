@@ -1,4 +1,7 @@
 from collections import defaultdict
+
+
+from copy import deepcopy
 from itertools import chain
 import jax.numpy as jnp
 

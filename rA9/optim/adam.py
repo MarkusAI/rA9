@@ -1,5 +1,5 @@
 import math
-from rA9.optim.optimizer import Optimizer
+from .optimizer import Optimizer
 import jax.numpy as jnp
 
 

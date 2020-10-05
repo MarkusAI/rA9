@@ -1,31 +1,6 @@
-from rA9.synapses.img2col import *
+import jax.numpy as jnp
 from rA9.networks.module import Module
-from jax import vjp
-from jax import linear_util as lu
-import jax
-from functools import wraps
 
-
-# 함수 정의
-def elementwise_grad(function, x, initial_gradient=None):
-    gradient_function = grad(function, initial_gradient, x)
-    return gradient_function
-
-
-def grad(fun, initial_grad=None, argnums=0):
-    value_and_grad_f = value_and_grad(fun, initial_grad, argnums)
-
-    docstr = ("Gradient of {fun} with respect to positional argument(s) "
-              "{argnums}. Takes the same arguments as {fun} but returns the "
-              "gradient, which has the same shape as the arguments at "
-              "positions {argnums}.")
-
-    @wraps(fun, docstr=docstr, argnums=argnums)
-    def grad_f(*args, **kwargs):
-        ans, g = value_and_grad_f(*args, **kwargs)
-        return g
-
-    return grad_f
 
 
 class Max_pool2d(Module):
@@ -44,7 +19,7 @@ class Max_pool2d(Module):
         return out
 
     def backward(self, grad_outputs):
-        jnp_fn = jnp_fn
+        jnp_fn = self.jnp_fn
         jnp_args = self.jnp_args
         indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
 

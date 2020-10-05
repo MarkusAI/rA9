@@ -1,7 +1,4 @@
-
-
 import jax.numpy as jnp
-import jax.scipy.signal as signal
 
 
 # LOSS

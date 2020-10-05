@@ -1,53 +1,9 @@
-import jax.numpy as jnp
-from rA9.synapses.img2col import *
-from rA9.networks.module import Module
-from jax import vjp
-from jax import linear_util as lu
-import jax
-from functools import wraps
-from jax.api import argnums_partial
 import math
+import numpy as jnp
+from rA9.synapses.img2col import *
 
-# 함수 정의
-def elementwise_grad(function, x, initial_gradient=None):
-    gradient_function = grad(function, initial_gradient, x)
-    return gradient_function
-
-
-def grad(fun, initial_grad=None, argnums=0):
-    value_and_grad_f = value_and_grad(fun, initial_grad, argnums)
-
-    docstr = ("Gradient of {fun} with respect to positional argument(s) "
-              "{argnums}. Takes the same arguments as {fun} but returns the "
-              "gradient, which has the same shape as the arguments at "
-              "positions {argnums}.")
-
-    @wraps(fun, docstr=docstr, argnums=argnums)
-    def grad_f(*args, **kwargs):
-        ans, g = value_and_grad_f(*args, **kwargs)
-        return g
-
-    return grad_f
-
-
-def value_and_grad(fun, initial_grad=None, argnums=0):
-    docstr = ("Value and gradient of {fun} with respect to positional "
-              "argument(s) {argnums}. Takes the same arguments as {fun} but "
-              "returns a two-element tuple where the first element is the value "
-              "of {fun} and the second element is the gradient, which has the "
-              "same shape as the arguments at positions {argnums}.")
-
-    @wraps(fun, docstr=docstr, argnums=argnums)
-    def value_and_grad_f(*args, **kwargs):
-        f = lu.wrap_init(fun, kwargs)
-        f_partial, dyn_args = argnums_partial(f, argnums, args)
-        ans, vjp_py = vjp(f_partial, *dyn_args)
-
-        g = vjp_py(jnp.ones((), jnp.result_type(ans)) if initial_grad is None else initial_grad)
-        g = g[0] if isinstance(argnums, int) else g
-        return (ans, g)
-
-    return value_and_grad_f
+from rA9.networks.module import Module
+from jax import random
 
 
 # 대가리 깨져도 elementgradient
@@ -61,9 +17,9 @@ class Conv2d(Module):
         self.stride = stride
         self.padding = padding
 
-        self.weight = jnp.zeros((self.out_channels, input_channels) + self.kernel_size)
+        self.weight = jnp.zeros((output_channels, input_channels) + self.kernel_size)
 
-        self.bias = jnp.zeros((output_channels, 1))
+        self.bias = jnp.zeros((self.output_channels, 1))
 
         self.reset_parameters()
 
@@ -73,11 +29,9 @@ class Conv2d(Module):
             n *= k
         stdv = 1. / math.sqrt(n)
 
-        keyW = jax.random.PRNGKey(0)
-        keyB = jax.random.PRNGKey(0)
-        self.weight = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.weight, key=keyW)
-        if self.bias is not None:
-            self.bias = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.bias, key=keyB)
+        keyW = random.PRNGKey(0)
+
+        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
 
     def forward(self, input):
 
@@ -96,8 +50,7 @@ class Conv2d(Module):
 
             out = jnp.matmul(W_col, X_col)
 
-            if b is not None:
-                out += b
+
             out = out.reshape(n_filters, h_out, w_out, n_x)
             out = jnp.transpose(out, (3, 0, 1, 2))
 
@@ -106,7 +59,7 @@ class Conv2d(Module):
             else:
                 return out
 
-        self.jnp_args = (input, self.weights, None if self.bias is None else self.bias)
+        self.jnp_args = (input, self.weights)
 
         output=jnp_fn(*self.jnp_args)
 
@@ -115,7 +68,7 @@ class Conv2d(Module):
 
     def backward(self, grad_outputs):
 
-        jnp_fn = jnp_fn
+        jnp_fn = self.jnp_fn
         jnp_args = self.jnp_args
         indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
 
