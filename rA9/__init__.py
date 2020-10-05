@@ -1,1 +1,5 @@
-import rA9.networks,rA9.neurons,rA9.synapses,rA9.utils,rA9.optim
+import rA9.networks
+import rA9.neurons
+import rA9.synapses
+import rA9.utils
+import rA9.optim
