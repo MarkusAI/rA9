@@ -1,10 +1,12 @@
 import jax.numpy as jnp
 import jax.random as random
+from ..networks.module import Module
 from jax.ops import index, index_update, index_add
 
 
-class Input(object):
+class Input(Module):
     def __init__(self, duration, dt, key=0):
+        super().__init__()
         self.dt = dt
         self.duration = duration
         self.key_x = random.PRNGKey(key)

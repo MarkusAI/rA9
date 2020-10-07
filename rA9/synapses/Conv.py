@@ -1,25 +1,26 @@
 import math
 import numpy as jnp
 from rA9.synapses.img2col import *
-
+from rA9.synapses.LIF_recall import LIF_recall
 from rA9.networks.module import Module
 from jax import random
 
-
-# 대가리 깨져도 elementgradient
 class Conv2d(Module):
 
-    def __init__(self, input_channels, output_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size, stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.stride = stride
         self.padding = padding
+        self.zeros = jnp.zeros((output_channels, input_channels) + self.kernel_size)
+        self.tau= tau
+        self.Vth= vth
+        self.dt= dt
+        self.v_current=v_current
 
-        self.weight = jnp.zeros((output_channels, input_channels) + self.kernel_size)
-
-        self.bias = jnp.zeros((self.output_channels, 1))
+        self.spike_list, self.v_current = LIF_recall(tau=self.tau,Vth=self.Vth,dt=self.dt,x=self.zeros,v_current=self.v_current)  # needto fix
 
         self.reset_parameters()
 
@@ -31,11 +32,11 @@ class Conv2d(Module):
 
         keyW = random.PRNGKey(0)
 
-        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
+        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.zeros.shape, key=keyW)
 
     def forward(self, input):
 
-        def jnp_fn(input_jnp, weights_jnp, bias=None, stride=1, padding=0):
+        def jnp_fn(input_jnp, weights_jnp, spike_list, stride=1, padding=0):
 
             n_filters, d_filter, h_filter, w_filter = weights_jnp.shape
             n_x, d_x, h_x, w_x = input_jnp.shape
@@ -47,31 +48,18 @@ class Conv2d(Module):
             h_out, w_out = int(h_out), int(w_out)
             X_col = im2col_indices(input_jnp, h_filter, w_filter, padding=padding, stride=stride)
             W_col = weights_jnp.reshape(n_filters, -1)
+            S_col = spike_list.reshape(n_filters,-1)
 
             out = jnp.matmul(W_col, X_col)
-
+            out= jnp.matmul(out,S_col)
 
             out = out.reshape(n_filters, h_out, w_out, n_x)
             out = jnp.transpose(out, (3, 0, 1, 2))
 
-            if bias is None:
-                return out
-            else:
-                return out
+            return out
 
-        self.jnp_args = (input, self.weights)
-
-        output=jnp_fn(*self.jnp_args)
+        output = jnp_fn(input,self.weight,self.spike_list)
 
         return output
 
-
     def backward(self, grad_outputs):
-
-        jnp_fn = self.jnp_fn
-        jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(self.needs_input_grad) if need_grad]
-
-        jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
-        grads = jnp_grad_fn(*jnp_args)
-        return grads
