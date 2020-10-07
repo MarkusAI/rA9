@@ -1,8 +1,9 @@
 import jax.numpy as jnp
 from jax.ops import index, index_add
+from ..networks.module import Module
 
 
-class LIF(object):
+class LIF(Module):
     # tau => Time Constant; Capacity * Resistance
 
     def __init__(self, tau_m, Vth, dt):
