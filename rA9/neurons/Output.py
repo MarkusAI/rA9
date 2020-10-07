@@ -1,9 +1,10 @@
 from jax.ops import index, index_add
 import jax.numpy as jnp
+from ..networks.module import Module
 
-
-class Output(object):
+class Output(Module):
     def __init__(self, tau_m, dt):
+        super().__init__()
         self.tau_m = tau_m
         self.dt = dt
 
