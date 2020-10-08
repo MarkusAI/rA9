@@ -44,8 +44,8 @@ def _pool_forward(X, spike_list, size=2, stride=2):
     S_col = im2col_indices(S_reshaped, size, size, padding=0, stride=stride)
     X_col = im2col_indices(X_reshaped, size, size, padding=0, stride=stride)
 
-    max_spike = jnp.argmax(S_col, axis=0)
-    max_idx = jnp.argmax(X_col, axis=0)
+    max_spike = jnp.mean(jnp.sum(S_col, axis=0))
+    max_idx = jnp.mean(jnp.sum(X_col, axis=0))
     out = jnp.array(X_col[max_idx, range(max_idx.size)])
     out_spike = jnp.array(S_col[max_spike, range(max_idx.size)])
 
