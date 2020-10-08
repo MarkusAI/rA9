@@ -1,15 +1,17 @@
 import math
 import numpy as jnp
 from rA9.synapses.img2col import *
-from rA9.synapses.LIF_recall import LIF_recall
+from rA9.synapses.LIF_recall import *
 from rA9.networks.module import Module
 from jax import random
 
 class Conv2d(Module):
 
-    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size,time,e_grad, stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.input_channels = input_channels
+        self.time=time
+        self.e_grad=e_grad
         self.output_channels = output_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.stride = stride
@@ -60,6 +62,8 @@ class Conv2d(Module):
 
         output = jnp_fn(input,self.weight,self.spike_list)
 
-        return output,self.v_current
+        return output
 
     def backward(self, grad_outputs):
+
+        LIF_backward(self.tau,self.Vth,grad_outputs,spike_list=self.spike_list,e_grad=self.e_grad,time=self.time)

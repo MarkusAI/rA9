@@ -1,8 +1,6 @@
 from collections import OrderedDict
 
 
-
-
 class Module(object):
     def __init__(self):
         self._parameters = OrderedDict()
@@ -29,7 +27,7 @@ class Module(object):
         for module in self.children():
             module._apply(fn)
 
-        for param in self.array:#검증 A
+        for param in self.array:  # 검증 A
             if param is not None:
                 param = fn(param)
         for key, buf in self._buffers.items():
