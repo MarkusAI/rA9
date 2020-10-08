@@ -7,11 +7,9 @@ from jax import random
 
 class Conv2d(Module):
 
-    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size,time,e_grad, stride=1, padding=0):
+    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size, stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.input_channels = input_channels
-        self.time=time
-        self.e_grad=e_grad
         self.output_channels = output_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.stride = stride
@@ -64,6 +62,6 @@ class Conv2d(Module):
 
         return output
 
-    def backward(self, grad_outputs):
+    def backward(self, grad_outputs,e_grad,timestep):
 
-        LIF_backward(self.tau,self.Vth,grad_outputs,spike_list=self.spike_list,e_grad=self.e_grad,time=self.time)
+        LIF_backward(self.tau,self.Vth,grad_outputs,spike_list=self.spike_list,e_grad=e_grad,time=timestep)

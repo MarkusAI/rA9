@@ -7,11 +7,9 @@ from rA9.synapses.LIF_recall import *
 
 
 class Linear(Module):
-    def __init__(self, in_features, out_features, time, e_grad, tau, vth, dt, v_current):
+    def __init__(self, in_features, out_features, tau, vth, dt, v_current):
         super(Linear, self).__init__()
         self.in_features = in_features
-        self.time = time
-        self.e_grad = e_grad
         self.out_features = out_features
         self.zeros = jnp.zeros((out_features, in_features))
         self.tau = tau
@@ -38,5 +36,5 @@ class Linear(Module):
         out = jnp_fn(*jnp_args)
         return out
 
-    def backward(self, grad_outputs):
-        LIF_backward(self.tau, self.Vth, grad_outputs, spike_list=self.spike_list, e_grad=self.e_grad, time=self.time)
+    def backward(self, grad_outputs,e_grad,timestep):
+        LIF_backward(self.tau, self.Vth, grad_outputs, spike_list=self.spike_list, e_grad=e_grad, time=timestep)

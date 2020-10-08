@@ -4,12 +4,10 @@ from .img2col import *
 from .LIF_recall import *
 
 
-class Max_pool2d(Module):
-    def __init__(self, input, kernel_size, stride, tau, vth, dt, v_current, time, e_grad):
-        super(Max_pool2d, self).__init__()
+class pool2d(Module):
+    def __init__(self, input, kernel_size, stride, tau, vth, dt, v_current):
+        super(pool2d, self).__init__()
         self.input = input
-        self.time = time
-        self.e_grad = e_grad
         self.kernel_size = kernel_size
         self.stride = stride
         self.tau = tau
@@ -27,8 +25,8 @@ class Max_pool2d(Module):
         out = jnp_fn(*self.jnp_args)
         return out
 
-    def backward(self, grad_outputs):
-        LIF_backward(self.tau, self.vth, grad_outputs, spike_list=self.spike_list, e_grad=self.e_grad, time=self.time)
+    def backward(self, grad_outputs,e_grad,timestep):
+        LIF_backward(self.tau, self.vth, grad_outputs, spike_list=self.spike_list, e_grad=e_grad, time=timestep)
 
 
 def _pool_forward(X, spike_list, size=2, stride=2):
