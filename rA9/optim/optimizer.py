@@ -1,4 +1,7 @@
 from collections import defaultdict
+
+
+from copy import deepcopy
 from itertools import chain
 import jax.numpy as jnp
 
@@ -32,6 +35,8 @@ class Optimizer(object):
                                      name)
                 else:
                     group.setdefault(name, default)
+
+
 
     def __getstate__(self):
         return {

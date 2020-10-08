@@ -1,76 +1,26 @@
 import math
-from functools import wraps
+import numpy as jnp
+from rA9.synapses.img2col import *
+from rA9.synapses.LIF_recall import *
+from rA9.networks.module import Module
+from jax import random
 
-import jax
-import jax.numpy as jnp
-from jax import jit
-from jax import linear_util as lu
-from jax import random, value_and_grad, vjp
-from jax.api import _check_scalar, argnums_partial
-
-from ..networks.module import Module
-from ..synapses.img2col import *
-
-# 함수 정의
-
-
-def elementwise_grad(function, x, initial_gradient=None):
-    gradient_function = grad(function, initial_gradient, x)
-    return gradient_function
-
-
-def grad(fun, initial_grad=None, argnums=0):
-    value_and_grad_f = value_and_grad(fun, initial_grad, argnums)
-
-    docstr = ("Gradient of {fun} with respect to positional argument(s) "
-              "{argnums}. Takes the same arguments as {fun} but returns the "
-              "gradient, which has the same shape as the arguments at "
-              "positions {argnums}.")
-
-    @wraps(fun, docstr=docstr, argnums=argnums)
-    def grad_f(*args, **kwargs):
-        ans, g = value_and_grad_f(*args, **kwargs)
-        return g
-
-    return grad_f
-
-
-def value_and_grad(fun, initial_grad=None, argnums=0):
-    docstr = ("Value and gradient of {fun} with respect to positional "
-              "argument(s) {argnums}. Takes the same arguments as {fun} but "
-              "returns a two-element tuple where the first element is the value "
-              "of {fun} and the second element is the gradient, which has the "
-              "same shape as the arguments at positions {argnums}.")
-
-    @wraps(fun, docstr=docstr, argnums=argnums)
-    def value_and_grad_f(*args, **kwargs):
-        f = lu.wrap_init(fun, kwargs)
-        f_partial, dyn_args = argnums_partial(f, argnums, args)
-        ans, vjp_py = vjp(f_partial, *dyn_args)
-
-        g = vjp_py(jnp.ones((), jnp.result_type(ans))
-                   if initial_grad is None else initial_grad)
-        g = g[0] if isinstance(argnums, int) else g
-        return (ans, g)
-
-    return value_and_grad_f
-
-
-# 대가리 깨져도 elementgradient
 class Conv2d(Module):
 
-    def __init__(self, input_channels, output_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size, stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.stride = stride
         self.padding = padding
+        self.zeros = jnp.zeros((output_channels, input_channels) + self.kernel_size)
+        self.tau= tau
+        self.Vth= vth
+        self.dt= dt
+        self.v_current=v_current
 
-        self.weight = jnp.zeros(
-            (output_channels, input_channels) + self.kernel_size)
-
-        self.bias = jnp.zeros((self.output_channels, 1))
+        self.spike_list, self.v_current = LIF_recall(tau=self.tau,Vth=self.Vth,dt=self.dt,x=self.zeros,v_current=self.v_current)  # needto fix
 
         self.reset_parameters()
 
@@ -81,17 +31,12 @@ class Conv2d(Module):
         stdv = 1. / math.sqrt(n)
 
         keyW = random.PRNGKey(0)
-        keyB = random.PRNGKey(0)
 
-        self.weight = random.uniform(
-            minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
-        if self.bias is not None:
-            self.bias = random.uniform(
-                minval=-stdv, maxval=stdv, shape=self.bias.shape, key=keyB)
+        self.weight = random.uniform(minval=-stdv, maxval=stdv, shape=self.zeros.shape, key=keyW)
 
     def forward(self, input):
 
-        def jnp_fn(input_jnp, weights_jnp, bias=None, stride=1, padding=0):
+        def jnp_fn(input_jnp, weights_jnp, spike_list, stride=1, padding=0):
 
             n_filters, d_filter, h_filter, w_filter = weights_jnp.shape
             n_x, d_x, h_x, w_x = input_jnp.shape
@@ -101,33 +46,22 @@ class Conv2d(Module):
             if not h_out.is_integer() or not w_out.is_integer():
                 raise Exception('Invalid output dimension!')  # 오류 체크
             h_out, w_out = int(h_out), int(w_out)
-            X_col = im2col_indices(input_jnp, h_filter,
-                                   w_filter, padding=padding, stride=stride)
+            X_col = im2col_indices(input_jnp, h_filter, w_filter, padding=padding, stride=stride)
             W_col = weights_jnp.reshape(n_filters, -1)
+            S_col = spike_list.reshape(n_filters,-1)
 
             out = jnp.matmul(W_col, X_col)
+            out= jnp.matmul(out,S_col)
 
-            if bias is not None:
-                out += bias
             out = out.reshape(n_filters, h_out, w_out, n_x)
             out = jnp.transpose(out, (3, 0, 1, 2))
 
             return out
 
-        self.jnp_args = (input, self.weights,
-                         None if self.bias is None else self.bias)
-
-        output = jnp_fn(*self.jnp_args)
+        output = jnp_fn(input,self.weight,self.spike_list)
 
         return output
 
-    def backward(self, grad_outputs):
+    def backward(self, grad_outputs,e_grad,timestep):
 
-        jnp_fn = jnp_fn
-        jnp_args = self.jnp_args
-        indexes = [index for index, need_grad in enumerate(
-            self.needs_input_grad) if need_grad]
-
-        jnp_grad_fn = elementwise_grad(jnp_fn, indexes, grad_outputs)
-        grads = jnp_grad_fn(*jnp_args)
-        return grads
+        LIF_backward(self.tau,self.Vth,grad_outputs,spike_list=self.spike_list,e_grad=e_grad,time=timestep)
