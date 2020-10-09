@@ -15,7 +15,7 @@ class LIF(Module):
         dV_tau = jnp.multiply(jnp.subtract(x, v_current), self.dt)
         dV = jnp.divide(dV_tau, self.tau_m)
         v_current = index_add(v_current, index[:], dV)
-        spike_list = jnp.greater_equal(v_current, self.Vth).astype(int)
+        spike_list = jnp.greater_equal(v_current, self.Vth).astype(int32)
         v_current = jnp.where(v_current >= self.Vth, 0,
                               v_current * jnp.exp(-1 / self.tau_m))
 
