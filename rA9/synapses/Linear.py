@@ -26,13 +26,12 @@ class Linear(Module):
         self.weight = jax.random.uniform(minval=-stdv, maxval=stdv, shape=self.weight.shape, key=keyW)
 
     def forward(self, input):
-        def jnp_fn(input_jnp, weights_jnp, spike_list):
+        def jnp_fn(input_jnp, weights_jnp):
             out = jnp.matmul(input_jnp, weights_jnp)
-            out = jnp.matmul(out, spike_list)
 
             return out
 
-        jnp_args = (input, self.weight, self.spike_list)
+        jnp_args = (input, self.weight)
         out = jnp_fn(*jnp_args)
         return out
 

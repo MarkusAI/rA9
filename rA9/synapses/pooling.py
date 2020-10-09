@@ -18,8 +18,8 @@ class pool2d(Module):
                                                      v_current=self.v_current)  # needto fix
 
     def forward(self, input, kernel_size):
-        def jnp_fn(input_jnp, kernel_size, spike_list):
-            return _pool_forward(input_jnp, spike_list, kernel_size)
+        def jnp_fn(input_jnp, kernel_size):
+            return _pool_forward(input_jnp, kernel_size)
 
         self.jnp_args = (input, kernel_size, self.spike_list)
         out = jnp_fn(*self.jnp_args)
@@ -29,7 +29,7 @@ class pool2d(Module):
         LIF_backward(self.tau, self.vth, grad_outputs, spike_list=self.spike_list, e_grad=e_grad, time=timestep)
 
 
-def _pool_forward(X, spike_list, size=2, stride=2):
+def _pool_forward(X, size=2, stride=2):
     n, d, h, w = X.shape
     h_out = (h - size) / stride + 1
     w_out = (w - size) / stride + 1
@@ -40,18 +40,12 @@ def _pool_forward(X, spike_list, size=2, stride=2):
     h_out, w_out = int(h_out), int(w_out)
 
     X_reshaped = X.reshape(n * d, 1, h, w)
-    S_reshaped = spike_list.reshape(n * d, 1, h, w)
-    S_col = im2col_indices(S_reshaped, size, size, padding=0, stride=stride)
     X_col = im2col_indices(X_reshaped, size, size, padding=0, stride=stride)
 
-    max_spike = jnp.mean(jnp.sum(S_col, axis=0))
     max_idx = jnp.mean(jnp.sum(X_col, axis=0))
     out = jnp.array(X_col[max_idx, range(max_idx.size)])
-    out_spike = jnp.array(S_col[max_spike, range(max_idx.size)])
 
-    out_spike = out_spike.reshape(h_out, w_out, n, d)
     out = out.reshape(h_out, w_out, n, d)
-    out = jnp.matmul(out, out_spike)
     out = jnp.transpose(out, (2, 3, 0, 1))
 
     return out
