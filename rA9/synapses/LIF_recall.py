@@ -7,7 +7,6 @@ def LIF_recall(tau,Vth,dt,x,v_current):
     return spike_list,v_current
 
 
-# TIME, EGRAD는 반드시 물어보기
 def LIF_backward(tau,Vth,x,spike_list,e_grad,time):
     model = LIF(tau_m=tau,Vth=Vth)
 
