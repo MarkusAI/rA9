@@ -12,18 +12,15 @@ class Linear(Module):
         super(Linear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
-        self.zeros = jnp.zeros((out_features,in_features))
+        self.zeros = jnp.zeros((in_features,out_features))
         self.tau = tau
-        self.weight=None
+        self.weight = None
         self.Vth = vth
         self.dt = dt
-        self.v_current = jnp.zeros((out_features,in_features))
+        self.v_current = jnp.zeros((in_features, out_features))
         self.spike_list, self.v_current = LIF_recall(self.tau, self.Vth, self.dt, self.zeros, self.v_current)
         self.reset_parameters()
-        if type(self.in_features) == tuple:
-            self.gamma = jnp.zeros(shape=(in_features,in_features))
-        else:
-            self.gamma = jnp.zeros(shape=in_features)
+        self.gamma = jnp.zeros(shape=(1, in_features))
 
     def reset_parameters(self):
         size = self.zeros.shape
@@ -36,12 +33,10 @@ class Linear(Module):
             out = jnp.matmul(input_jnp, weights_jnp)
 
             return out
-
         jnp_args = (input, self.weight)
-        if type(self.in_features) == tuple:
-            index_add(self.gamma,index[:,:], input)
-        else:
-            index_add(self.gamma,index[:], input)
+        index_add(self.gamma, index[:], input)
+
+
 
         return jnp_fn(*jnp_args)
 
@@ -61,3 +56,4 @@ class Linear(Module):
         return LIF_backward(self.tau, self.Vth, dx,
                             spike_list=self.spike_list, e_grad=e_grad,
                             time=timestep), self.weight
+
