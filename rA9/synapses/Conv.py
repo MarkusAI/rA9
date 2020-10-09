@@ -7,7 +7,7 @@ from jax import random
 
 class Conv2d(Module):
 
-    def __init__(self, input_channels,tau,vth,dt,v_current, output_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, input_channels,output_channels, kernel_size,tau=0.1,vth=1,dt=1,  stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.grad =None
         self.input_channels = input_channels
@@ -19,7 +19,6 @@ class Conv2d(Module):
         self.tau= tau
         self.Vth= vth
         self.dt= dt
-        self.v_current=v_current
         self.S_col=None
         self.spike_list = jnp.zeros(kernel_size,kernel_size)
         self.v_current = jnp.zeros(kernel_size,kernel_size)
@@ -70,7 +69,7 @@ class Conv2d(Module):
        fn,c,fh,fw = self.weight.shape
        gamma  = self.spike_list[0]
 
-       tau= jnp.divide(jnp.subtract(timestep,spike_list[1]),-self.tau)
+       tau= jnp.divide(jnp.subtract(timestep,self.spike_list[1]),-self.tau)
        prime= jnp.multiply(jnp.exp(tau),(-1/self.tau))
        aLIFnet= jnp.multiply(1/self.Vth,(1+jnp.multiply(jnp.divide(1,gamma,prime))))
        self.grad= jnp.multiply(self.weight,aLIFnet)
