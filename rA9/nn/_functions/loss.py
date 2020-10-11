@@ -12,7 +12,6 @@ class Spikeloss(Function):
         assert isinstance(target, Variable)
 
         def np_fn(input_np, target_np, time_step):
-            print(input_np - target_np)
             return (1 / 2) * jnp.sum((input_np - target_np) ** 2)
         # target.data -> jnp.array is none..
         np_args = (input.data, target.data, time_step)

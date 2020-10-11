@@ -74,15 +74,16 @@ i = 0
 for epoch in range(15):
     pe = PoissonEncoder(duration=50)
     for data, target in training_generator:
+        target =Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
-            data, target = Variable(q), Variable(target)
+            data = Variable(q)
             optimizer.zero_grad()
             output = model(data)
             loss = F.Spikeloss(output, target, time_step=t+1)
             loss.backward()    # calc gradients
             train_loss.append(loss.data)
             optimizer.step()   # update gradients
-            print(train_loss)
-        if i % 1000 == 0:
-            print('Train Step: {}\tLoss: {:.3f}\tAccuracy: {:.3f}'.format(i, loss.data[0], accuracy))
+        if i % 1 == 0:
+
+            print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
         i += 1
