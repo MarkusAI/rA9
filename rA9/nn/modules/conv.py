@@ -12,10 +12,11 @@ class Conv2d(Module):
         self.dt = dt
         self.Vth = Vth
         self.gamma = None
+        self.time_step = 1
         self.tau_m = tau_m
         self.stride = stride
-        self.padding = padding
         self.v_current = None
+        self.padding = padding
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = (kernel_size, kernel_size)
@@ -30,7 +31,7 @@ class Conv2d(Module):
 
         self.weight.uniform(-stdv, stdv)
 
-    def forward(self, input):
+    def forward(self, input, time):
         if self.v_current is None:
             self.v_current = Parameter(jnp.zeros(jnp.shape((input-self.kernel_size)//self.stride+1)))
         if self.gamma is None:
@@ -39,7 +40,7 @@ class Conv2d(Module):
         return F.conv2d(input=input, weights=self.weight,
                         stride=self.stride, padding=self.padding,
                         v_current=self.v_current, Vth=self.Vth,
-                        tau_m=self.tau_m)
+                        tau_m=self.tau_m), time + self.dt*self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

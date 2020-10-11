@@ -19,3 +19,7 @@ def Output(input, weights, v_current, tau_m, dt, time_step):
 
 def dropout(input, p=0.5, training=False):
     return _functions.Dropout.apply(input, p, training)
+
+
+def pooling(input, size, stride=1):
+    return _functions.Pooling.apply(input, size, stride)
