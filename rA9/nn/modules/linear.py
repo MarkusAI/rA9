@@ -10,8 +10,9 @@ class Linear(Module):
         self.in_features = in_features
         self.out_features = out_features
         self.weight = Parameter(jnp.zeros(shape=(out_features, in_features)))
-        self.gamma = Parameter(jnp.zeros(shape=(1, in_features)))
         self.v_current = Parameter(jnp.zeros(shape=(1, in_features)))
+        self.gamma = Parameter(jnp.zeros(shape=(1, in_features)))
+        self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
         self.dt = dt
@@ -22,11 +23,11 @@ class Linear(Module):
         stdv = 1. / jnp.sqrt(size[1])
         self.weight.uniform(-stdv, stdv)
 
-    def forward(self, input):
+    def forward(self, input, time):
         return F.linear(input=input, weight=self.weight,
                         v_current=self.v_current, gamma=self.gamma,
-                        tau_m=self.tau_m,Vth=self.Vth, dt=self.dt
-                        )
+                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt
+                        ), time + self.dt*self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
