@@ -9,7 +9,7 @@ from jax.ops import index, index_add
 class Linear(Function):
     id = "Linear"
     @staticmethod
-    def forward(ctx, input, weights, v_current, gamma,tau_m, Vth, dt):
+    def forward(ctx, input, weights, v_current, gamma,tau_m, Vth, dt,time_step):
         assert isinstance(input, Variable)
         assert isinstance(weights, Variable)
         assert isinstance(v_current, Variable)
@@ -23,8 +23,10 @@ class Linear(Function):
 
             return spike_list, v_current_n
 
-        np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
-        return np_fn, np_args, np_fn(*np_args)
+        np_args = (input.data, weights.data)
+        spike_list,v_current_n = np_fn(*np_args)
+        grad_np_args =(weights.data,time_step,spike_list,Vth,gamma,tau_m)
+        return np_fn, np_args, np_fn(*np_args),grad_np_args
 
 
     @staticmethod

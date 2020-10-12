@@ -40,7 +40,7 @@ class Conv2d(Module):
         return F.conv2d(input=input, weights=self.weight,
                         stride=self.stride, padding=self.padding,
                         v_current=self.v_current, Vth=self.Vth,
-                        tau_m=self.tau_m), time + self.dt*self.time_step
+                        tau_m=self.tau_m,time_step=time,dt=self.dt), time + self.dt*self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

@@ -27,7 +27,7 @@ class Linear(Module):
         return F.linear(input=input, weight=self.weight,
                         v_current=self.v_current, gamma=self.gamma,
                         tau_m=self.tau_m, Vth=self.Vth, dt=self.dt
-                        ), time + self.dt*self.time_step
+                        ,time_step =time), time + self.dt*self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

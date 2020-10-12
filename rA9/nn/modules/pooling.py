@@ -13,8 +13,8 @@ class Pooling(Module):
         self.input= input
         self.size = size
 
-    def forward(self, input):
-        return F.pooling(input=self.input,size=self.size,stride=self.stride)
+    def forward(self, input,time):
+        return F.pooling(input=self.input,size=self.size,stride=self.stride),time
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

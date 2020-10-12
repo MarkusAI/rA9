@@ -23,9 +23,10 @@ class Conv2d(Function):
                                             tau_m=tau_m.data,
                                             Vth=Vth.data,
                                             dt=dt.data)
-        v_current.data = v_current
-        return spike_list
 
+        spike_list, v_current_n = np_fn(*np_args)
+        grad_np_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
+        return np_fn, np_args, np_fn(*np_args), grad_np_args
     @staticmethod
     def backward(ctx, grad_outputs):
         return super(Conv2d, Conv2d).backward(ctx, grad_outputs)

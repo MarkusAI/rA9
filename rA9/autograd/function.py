@@ -111,8 +111,8 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        np_args = ctx.np_args
-        grads = lif_grad(grad_outputs, *np_args)
+        grad_np_args = ctx.grad_np_args
+        grads = lif_grad(grad_outputs, *grad_np_args)
         return grads
 
     @staticmethod
