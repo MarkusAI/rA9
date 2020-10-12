@@ -100,7 +100,7 @@ class Function(with_metaclass(FunctionMeta)):
             grad_fn = backward_cls()
             np_fn, np_args, output = ctx.forward(grad_fn, *args)
             ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output[0][0], requires_grad=True)
+            return Variable(data=output, gamma=args[4])
 
     @staticmethod
     def forward(*args, **kwargs):
@@ -117,5 +117,6 @@ class Function(with_metaclass(FunctionMeta)):
             np_args = ctx.np_args
             grads = lif_grad(grad_outputs, *np_args)
             return grads
+
 
 
