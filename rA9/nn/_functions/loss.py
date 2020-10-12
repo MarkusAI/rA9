@@ -10,7 +10,7 @@ class Spikeloss(Function):
     def forward(ctx, input, target, time_step):
         assert isinstance(input, Variable)
         assert isinstance(target, Variable)
-        target_np = jnp.squeeze(jnp.eye(len(input.data))[target.data.reshape(-1)])
+        target_np = jnp.squeeze(jnp.eye(input.data.size)[target.data.reshape(-1)])
 
         def np_fn(input_np, target_np, time_step):
             return (1 / 2) * jnp.sum((input_np - target_np) ** 2)
