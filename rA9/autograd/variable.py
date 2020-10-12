@@ -5,10 +5,11 @@ import jax.random as random
 
 class Variable(object):
 
-    def __init__(self, data, requires_grad=False, grad_fn=None):
+    def __init__(self, data, gamma=None,requires_grad=False, grad_fn=None):
         self.data = data
         self.grad = None
         self.grad_fn = grad_fn
+        self.gamma = gamma
         self.requires_grad = requires_grad
 
     def grad_fill_zero(self):
@@ -24,9 +25,8 @@ class Variable(object):
         if self.grad_fn is not None:
             raise RuntimeError("get_grad_accumulator() should be only called on leaf Variables")
 
-        if not self.requires_grad:
+        if len(jnp.argwhere(self.gamma == 0)) != 0 and self.requires_grad:
             return None
-
 
     def backward(self):
         if self.size > 1:
@@ -69,3 +69,4 @@ class Variable(object):
 
 
 from ._functions import *
+
