@@ -29,7 +29,7 @@ class Pooling(Module):
            
     def forward(self, input,time):
         if self.v_current is None:
-            self.v_current = Parameter(jnp.zeros(jnp.shape((input-self.kernel)))
+            self.v_current = Parameter(jnp.zeros(jnp.shape((input-self.kernel)//self.stride+1)))
         if self.gamma is None:
             self.v_current = Parameter(jnp.zeros(jnp.shape((input-self.kernel_size)//self.stride+1)))
         return F.pooling(input=self.input,weight=self.weight,v_current=self.v_current,
