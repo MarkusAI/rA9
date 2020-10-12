@@ -1,5 +1,5 @@
 from .variable import *
-from .LIF_grad import lif_grad
+from .LIF_grad import *
 
 
 
@@ -90,17 +90,19 @@ class Function(with_metaclass(FunctionMeta)):
     @classmethod
     def apply(ctx, *args):
         if getattr(ctx(), 'id') == 'Spikeloss':
-            backward_cls = ctx()._backward_cls
-            grad_fn = backward_cls()
-            np_fn, np_args, output = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output/np_args[2],requires_grad=True)
+            print(ctx().np_args)
+
+            ctx().backwardloss()
+            output, grad_np_args = ctx.forward(grad_fn, *args)
+            ctx.setup_grad_fn(grad_fn, np_fn, grad_np_args, *args)
+            return Variable(data=10,requires_grad=True)
 
         else:
             backward_cls = ctx()._backward_cls
             grad_fn = backward_cls()
-            np_fn, np_args, output = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            print(len(ctx.forward(grad_fn,*args)))
+            np_fn, np_args, output, grad_np_args = ctx.forward(grad_fn, *args)
+            ctx.setup_grad_fn(grad_fn, np_fn, grad_np_args, *args)
             return Variable(data=output[0][0], requires_grad=True)
 
 
@@ -116,9 +118,9 @@ class Function(with_metaclass(FunctionMeta)):
         return grads
 
     @staticmethod
-    def backward_loss(ctx, grad_outputs):
-        np_args = ctx.np_args
-        grads = lif_grad(grad_outputs, *np_args)
+    def backwardloss(ctx):
+        print(ctx().np_args)
+        grads = loss_grad(np_args[0],np_args[1],np_args[2])
         return grads
 
 

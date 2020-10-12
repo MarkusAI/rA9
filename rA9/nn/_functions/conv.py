@@ -8,24 +8,23 @@ from rA9.autograd import Variable
 class Conv2d(Function):
     id = "Conv2d"
     @staticmethod
-    def forward(ctx, input, weights, v_current, tau_m, Vth, dt, stride=1, padding=0):
+    def forward(ctx, input, weights, v_current,time_step, tau_m, Vth, dt, stride=1, padding=0):
         assert isinstance(input, Variable)
         assert isinstance(weights, Variable)
         assert isinstance(v_current, Variable)
 
         def np_fn(input_np, weights_np, stride=1, padding=0):
-            return conv_forward(input_np, weights_np, stride, padding)
+            return conv_forward(X=input_np,W= weights_np, stride=stride,padding= padding)
 
-        np_args = (input.data, weights.data)
+        np_args = (input.data, weights.data,stride,padding)
         inv_current = np_fn(*np_args)
         spike_list, v_current = jit(jnp_fn)(x=inv_current,
                                             v_current=v_current.data,
                                             tau_m=tau_m.data,
                                             Vth=Vth.data,
                                             dt=dt.data)
-
-        spike_list, v_current_n = np_fn(*np_args)
-        grad_np_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
+        np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
+        grad_np_args = (weights.data, time_step, spike_list, Vth, gamma.data, tau_m)
         return np_fn, np_args, np_fn(*np_args), grad_np_args
     @staticmethod
     def backward(ctx, grad_outputs):

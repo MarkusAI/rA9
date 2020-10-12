@@ -34,10 +34,12 @@ class Output(Function):
                     , tau_m
                 )
                 , time_step)
-
+        spike_list =None
+        Vth=None
+        gamma =None
         np_args = (input.data, weights.data,v_current, time_step, dt, tau_m)
-
-        return np_fn, np_args, np_fn(*np_args)
+        grad_np_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
+        return np_fn, np_args, np_fn(*np_args),grad_np_args
 
     @staticmethod
     def backward(ctx, grad_outputs):

@@ -23,9 +23,9 @@ class Linear(Function):
 
             return spike_list, v_current_n
 
-        np_args = (input.data, weights.data)
+        np_args = (input.data, weights.data,v_current.data, gamma.data, tau_m, Vth,dt)
         spike_list,v_current_n = np_fn(*np_args)
-        grad_np_args =(weights.data,time_step,spike_list,Vth,gamma,tau_m)
+        grad_np_args =(weights.data,time_step,spike_list,Vth,gamma.data,tau_m)
         return np_fn, np_args, np_fn(*np_args),grad_np_args
 
 

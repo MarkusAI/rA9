@@ -28,7 +28,6 @@ class Conv2d(Module):
         for k in self.kernel_size:
             n *= k
         stdv = 1. / jnp.sqrt(n)
-
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input, time):

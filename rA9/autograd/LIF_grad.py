@@ -29,3 +29,9 @@ def lif_grad(grad_output, *args):
     else:
         print(args[4])
         return jit(grad)(grad_output, *args)
+
+
+def loss_grad(input,target,timestep):
+    def lossgrad(input,target,timestep):
+        return (input-target)/timestep
+    return jit(lossgrad)(input,target,timestep)

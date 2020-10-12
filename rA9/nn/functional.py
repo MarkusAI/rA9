@@ -21,5 +21,5 @@ def dropout(input, p=0.5, training=False):
     return _functions.Dropout.apply(input, p, training)
 
 
-def pooling(input, size, stride=1):
-    return _functions.Pooling.apply(input, size, stride)
+def pooling(input, size,weight,v_current,time_step,tau_m,Vth,dt, stride=1):
+    return _functions.Pooling.apply(input,weight, v_current,time_step, tau_m, Vth, dt,size, stride)
