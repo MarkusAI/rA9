@@ -119,4 +119,3 @@ class Function(with_metaclass(FunctionMeta)):
             return grads
 
 
-
