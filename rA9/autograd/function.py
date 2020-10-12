@@ -2,7 +2,6 @@ from .variable import *
 from .LIF_grad import *
 
 
-
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
 
@@ -90,21 +89,18 @@ class Function(with_metaclass(FunctionMeta)):
     @classmethod
     def apply(ctx, *args):
         if getattr(ctx(), 'id') == 'Spikeloss':
-            print(ctx().np_args)
-
-            ctx().backwardloss()
-            output, grad_np_args = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, grad_np_args, *args)
-            return Variable(data=10,requires_grad=True)
+            backward_cls = ctx()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output = ctx.forward(grad_fn, *args)
+            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            return Variable(data=output, requires_grad=True)
 
         else:
             backward_cls = ctx()._backward_cls
             grad_fn = backward_cls()
-            print(len(ctx.forward(grad_fn,*args)))
-            np_fn, np_args, output, grad_np_args = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, grad_np_args, *args)
-            return Variable(data=output[0][0], requires_grad=True)
-
+            np_fn, np_args, output = ctx.forward(grad_fn, *args)
+            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            return Variable(data=output, gamma=args[4])
 
     @staticmethod
     def forward(*args, **kwargs):
@@ -113,17 +109,14 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        grad_np_args = ctx.grad_np_args
-        grads = lif_grad(grad_outputs, *grad_np_args)
-        return grads
-
-    @staticmethod
-    def backwardloss(ctx):
-        print(ctx().np_args)
-        grads = loss_grad(np_args[0],np_args[1],np_args[2])
-        return grads
-
-
+        if getattr(ctx(), 'id') == 'Spikeloss':
+            np_args = ctx.np_args
+            grads = loss_grad(*np_args)
+            return grads
+        else:
+            np_args = ctx.np_args
+            grads = lif_grad(grad_outputs, *np_args)
+            return grads
 
 
 

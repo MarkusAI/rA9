@@ -1,5 +1,6 @@
-import jax.numpy as jnp
 from jax import jit
+from jax import grad
+import jax.numpy as jnp
 
 
 def lif_grad(grad_output, *args):
@@ -24,14 +25,11 @@ def lif_grad(grad_output, *args):
             )
         )
 
-    if len(jnp.argwhere(args[4] == 0)) != 0:
-        return None
-    else:
-        print(args[4])
-        return jit(grad)(grad_output, *args)
+    return jit(grad)(grad_output, *args)
 
 
-def loss_grad(input,target,timestep):
-    def lossgrad(input,target,timestep):
-        return (input-target)/timestep
-    return jit(lossgrad)(input,target,timestep)
+def loss_grad(input, target, timestep):
+    def np_fn(input, target, timestep):
+        return (1/2)*jnp.sum((input-target)**2)
+    return (grad(np_fn)(input, target))/timestep
+
