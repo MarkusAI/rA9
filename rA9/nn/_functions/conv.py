@@ -22,11 +22,11 @@ class Conv2d(Function):
             return spike_list,v_current_n
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
-        np_grad_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
         spike, v_current_n = np_fn(*np_args)
         spike_time = spike * dt * time_step
         v_current.data = v_current_n
         spike_list = spike_time
+        np_grad_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike_list
 
     @staticmethod
