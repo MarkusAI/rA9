@@ -15,6 +15,7 @@ class Spikeloss(Function):
         def np_fn(input_np, target_np, time_step):
             return (1 / 2) * jnp.sum((input_np - target_np) ** 2)
         # target.data -> jnp.array is none..
+
         np_args = (input.data, target_np, time_step)
         return np_fn, np_args, np_fn(*np_args)
 
