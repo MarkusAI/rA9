@@ -10,7 +10,9 @@ class Linear(Function):
     id = "Linear"
 
     @staticmethod
+
     def forward(ctx, input, time_step, weights, spike_time, v_current, gamma, tau_m, Vth, dt):
+
         assert isinstance(input, Variable)
         assert isinstance(gamma, Variable)
         assert isinstance(weights, Variable)
@@ -26,6 +28,7 @@ class Linear(Function):
             return spike_list, v_current_n, index_add(gamma_np, index[:], spike_list)
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
+
         spike, v_current_n, gamma_np = np_fn(*np_args)
         gamma.data = gamma_np
         v_current.data = v_current_n
@@ -33,6 +36,7 @@ class Linear(Function):
         spike_time = jnp.concatenate((spike.T, spike_time.T), axis=1)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
+
 
     @staticmethod
     def backward(ctx, grad_outputs):

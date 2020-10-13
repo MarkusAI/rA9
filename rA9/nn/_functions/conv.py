@@ -8,23 +8,27 @@ from rA9.autograd import Variable
 class Conv2d(Function):
     id = "Conv2d"
     @staticmethod
-    def forward(ctx, input, weights, v_current, tau_m, Vth, dt, stride=1, padding=0):
+    def forward(ctx, input,time_step, weights,spike_list, v_current, gamma,tau_m, Vth, dt, stride=1, padding=0):
         assert isinstance(input, Variable)
+        assert isinstance(gamma,Variable)
         assert isinstance(weights, Variable)
         assert isinstance(v_current, Variable)
 
-        def np_fn(input_np, weights_np, stride=1, padding=0):
-            return conv_forward(input_np, weights_np, stride, padding)
+        def np_fn(input_np, weights_np,v_current_np,gamma_np,tau_m,Vth,dt, stride=1, padding=0):
+            inv_current= conv_forward(input_np, weights_np, stride, padding)
+            spike_list, v_current_n = jit(jnp_fn)(x=inv_current, v_current=v_current_np,
+                                                  tau_m=tau_m, Vth=Vth, dt=dt)
+            index_add(gamma_np, index[:], spike_list)
+            return spike_list,v_current_n, index_add(gamma_np, index[:], spike_list)
 
-        np_args = (input.data, weights.data)
-        inv_current = np_fn(*np_args)
-        spike_list, v_current = jit(jnp_fn)(x=inv_current,
-                                            v_current=v_current.data,
-                                            tau_m=tau_m.data,
-                                            Vth=Vth.data,
-                                            dt=dt.data)
-        v_current.data = v_current
-        return spike_list
+        np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
+        spike, v_current_n, gamma_np = np_fn(*np_args)
+        gamma.data = gamma_np
+        v_current.data = v_current_n
+        spike_time = jnp.multiply(spike, dt * time_step)
+        spike_time = jnp.concatenate((spike.T, spike_time.T), axis=1)
+        np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
+        return np_fn, np_grad_args, spike
 
     @staticmethod
     def backward(ctx, grad_outputs):
