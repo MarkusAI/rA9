@@ -29,8 +29,8 @@ class Linear(Function):
         spike, v_current_n, gamma_np = np_fn(*np_args)
         gamma.data = gamma_np
         v_current.data = v_current_n
-        spikeff = jnp.multiply(spike, dt * time_step)
-        spike_time = jnp.concatenate((spike.T, spikeff.T), axis=1)
+        spike_time = jnp.multiply(spike, dt * time_step)
+        spike_time = jnp.concatenate((spike.T, spike_time.T), axis=1)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 
