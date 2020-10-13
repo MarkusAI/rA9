@@ -23,15 +23,16 @@ class Pooling(Function):
                                                   tau_m=tau_m, Vth=Vth, dt=dt)
             index_add(gamma_np, index[:], spike_list)
 
-            return spike_list, v_current_n
+            return spike_list, v_current_n,index_add(gamma_np, index[:], spike_list)
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
-        spike, v_current_n = np_fn(*np_args)
-        spike_time = spike * dt * time_step
+        spike, v_current_n, gamma_np = np_fn(*np_args)
+        gamma.data = gamma_np
         v_current.data = v_current_n
-        spike_list = spike_time
-        np_grad_args = (weights.data, time_step, spike_list, Vth, gamma, tau_m)
-        return np_fn, np_grad_args, spike_list
+        spike_time = jnp.multiply(spike, dt * time_step)
+        spike_time = jnp.concatenate((spike.T, spike_time.T), axis=1)
+        np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
+        return np_fn, np_grad_args, spiket
 
     @staticmethod
     def backward(ctx, grad_outputs):
