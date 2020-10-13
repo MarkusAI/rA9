@@ -6,7 +6,7 @@ import rA9.nn.functional as F
 
 from rA9.utils import PoissonEncoder
 
-batch_size = 16
+batch_size = 1
 
 
 class SNN(Module):
