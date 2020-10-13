@@ -8,6 +8,7 @@ def jnp_fn(x, v_current, tau_m, Vth, dt):
             (
                 jnp.multiply(jnp.subtract(x, v_current), dt)
             ), tau_m
+
         )
                   )
         , Vth).astype('int32'), jnp.where(v_current >= Vth, 0,
