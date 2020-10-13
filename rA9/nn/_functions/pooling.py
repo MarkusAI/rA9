@@ -30,7 +30,7 @@ class Pooling(Function):
         gamma.data = gamma_np
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
-        spike_time = jnp.concatenate((spike.T, spike_time.T), axis=1)
+        spike_time = jnp.concatenate((spike, spike_time), axis=1)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spiket
 

@@ -66,7 +66,7 @@ class FlattenAndCast(object):
 mnist_dataset = MNIST('/tmp/mnist/', download=True, transform=FlattenAndCast())
 training_generator = NumpyLoader(mnist_dataset, batch_size=batch_size, num_workers=0)
 
-optimizer = Adam(model.parameters())
+optimizer = Adam(model.parameters(),lr=0.01)
 model.train()
 train_loss = []
 
@@ -78,12 +78,12 @@ for epoch in range(15):
         for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q)
             optimizer.zero_grad()
-            output = model(data)
+            output = model.forward(data,t+1)
             loss = F.Spikeloss(output, target, time_step=t+1)
             loss.backward()    # calc gradients
             train_loss.append(loss.data)
             optimizer.step()   # update gradients
-        if i % 1 == 0:
+        if i % 50 == 0:
 
             print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
         i += 1
