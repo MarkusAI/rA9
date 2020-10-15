@@ -17,8 +17,7 @@ class Linear(Function):
         assert isinstance(gamma, Variable)
         assert isinstance(weights, Variable)
         assert isinstance(v_current, Variable)
-
-
+        
         def np_fn(input_np, weights_np, v_current_np, gamma_np, tau_m, Vth, dt):
             #gamma reset problem
             inv_current = jnp.matmul(input_np, weights_np)
