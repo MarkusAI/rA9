@@ -7,11 +7,12 @@ import jax.numpy as jnp
 
 class Pooling(Module):
 
-    def __init__(self, size=2, stride=2, tau_m=0.1, Vth=1, dt=1):
+    def __init__(self, channel, size=2, stride=2, tau_m=0.1, Vth=1, dt=1):
         super(Pooling, self).__init__()
         self.size = size
         self.stride = stride
-        Pooling.weight = None
+
+        self.weight = Parameter(jnp.zeros(channel, size, size))
         Pooling.v_current = None
         Pooling.gamma = None
         Pooling.spike_list = None
@@ -27,8 +28,6 @@ class Pooling(Module):
                 int((insize.shape[2] - self.size) / self.stride + 1),
                 int((insize.shape[3] - self.size) / self.stride + 1))
 
-        if Pooling.weight is None:
-            Pooling.weight = Parameter(jnp.zeros(shape=Size))
         if Pooling.v_current is None:
             Pooling.v_current = Parameter(jnp.zeros(shape=Size))
         if Pooling.gamma is None:
@@ -36,13 +35,13 @@ class Pooling(Module):
         if Pooling.spike_list is None:
             Pooling.spike_list = jnp.zeros(shape=Size)
         out = F.pooling(input=input, size=self.size, time_step=time,
-                        weights=Pooling.weight, spike_list=Pooling.spike_list,
+                        weights=self.weight, spike_list=Pooling.spike_list,
                         v_current=Pooling.v_current, gamma=Pooling.gamma, tau_m=self.tau_m,
                         Vth=self.Vth, dt=self.dt, stride=self.stride)
         Pooling.gamma = None
         Pooling.spike_list = None
         Pooling.v_current = None
-        Pooling.weight =None
+
         return out, time + self.dt * self.time_step
 
     def __repr__(self):
