@@ -63,6 +63,7 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def setup_grad_fn(grad_fn, np_fn, np_args, *args):
+
         grad_fn.saved_variables = ()
         grad_fn.next_functions = ()
         grad_fn.needs_input_grad = ()
@@ -87,19 +88,20 @@ class Function(with_metaclass(FunctionMeta)):
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
 
     @classmethod
-    def apply(ctx, *args):
-        if getattr(ctx(), 'id') == 'Spikeloss':
-            backward_cls = ctx()._backward_cls
+    def apply(cls, *args):
+        if getattr(cls(), 'id') == 'Spikeloss':
+            backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
-            np_fn, np_args, output = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+
+            np_fn, np_args, output = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, requires_grad=True)
 
         else:
-            backward_cls = ctx()._backward_cls
+            backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
-            np_fn, np_args, output = ctx.forward(grad_fn, *args)
-            ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            np_fn, np_args, output = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, gamma=args[4])
 
     @staticmethod

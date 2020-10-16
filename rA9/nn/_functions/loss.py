@@ -10,13 +10,14 @@ class Spikeloss(Function):
     def forward(ctx, input, target, time_step):
         assert isinstance(input, Variable)
         assert isinstance(target, Variable)
-        target_np = jnp.squeeze(jnp.eye(input.data.size)[target.data.reshape(-1)])
 
         def np_fn(input_np, target_np, time_step):
-            return (1 / 2) * jnp.sum((input_np - target_np) ** 2)
+            input_np = jnp.argmax(input_np)
+            return jnp.sum((input_np - target_np) ** 2) / 2
+
         # target.data -> jnp.array is none..
 
-        np_args = (input.data, target_np, time_step)
+        np_args = (input.data, target.data, time_step)
         return np_fn, np_args, np_fn(*np_args)
 
     @staticmethod

@@ -18,6 +18,7 @@ class Conv2d(Function):
 
         def np_fn(input_np, weights_np, v_current_np, gamma_np, tau_m, Vth, dt, stride=1, padding=0):
             inv_current = conv_forward(input_np, weights_np, stride, padding)
+
             spike_list, v_current_n = jit(jnp_fn)(x=inv_current, v_current=v_current_np,
                                                   tau_m=tau_m, Vth=Vth, dt=dt)
 
@@ -51,9 +52,8 @@ def conv_forward(X, W, stride=1, padding=0):
 
     X_col = im2col_indices(X, h_filter, w_filter, padding=padding, stride=stride)
     W_col = W.reshape(n_filters, -1)
-
+    
     out = jnp.matmul(W_col, X_col)
     out = out.reshape(n_filters, h_out, w_out, n_x)
     out = jnp.transpose(out, (3, 0, 1, 2))
-
     return out
