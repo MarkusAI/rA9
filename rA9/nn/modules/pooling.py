@@ -7,33 +7,43 @@ import jax.numpy as jnp
 
 class Pooling(Module):
 
-    def __init__(self, input, size, stride=1,tau_m=0.1, Vth=1, dt=1):
+    def __init__(self, channel, size=2, stride=2, tau_m=0.1, Vth=1, dt=1):
         super(Pooling, self).__init__()
-        self.input= input
         self.size = size
-        self.stride=stride
-        self.weight = Parameter(jnp.zeros(shape=(jnp.shape(input))))
-        self.v_current = None
-        self.gamma = None
-        self.spike_list = None
+        self.stride = stride
+        self.kernel =(size,size)
+
+        self.weight = Parameter(jnp.ones((channel,1)+self.kernel))
+        Pooling.v_current = None
+        Pooling.gamma = None
+        Pooling.spike_list = None
         self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
         self.dt = dt
-        self.reset_parameters()
 
-    def forward(self, input):
-        insize=input.data
-        if self.v_current is None:
-            self.v_current = Parameter(jnp.zeros(jnp.shape(int(insize.shape[0]/self.size+1),int(insize.shape[1]/self.size+1))))
-        if self.gamma is None:
-            self.gamma = Parameter(jnp.zeros(jnp.shape((int(insize.shape[0]/self.size+1),int(insize.shape[1]/self.size+1)))))
-        if self.spike_list is None:
-            self.spike_list = jnp.zeros(jnp.shape((int(insize.shape[0]/self.size+1),int(insize.shape[1]/self.size+1))))
-        return F.pooling(input=self.input,size=self.size,time_step=self.time_step,
-                         weights=self.weight,spike_list=self.spike_list,
-                         v_current=self.v_current,gamma=self.gamma,tau_m=self.tau_m,
-                         Vth=self.Vth,dt=self.dt,stride=self.stride)
+    def forward(self, input, time):
+        insize = input.data
+        #print(self.weight.data)
+        Size = (insize.shape[0], insize.shape[1],
+                int((insize.shape[2] - self.size) / self.stride + 1),
+                int((insize.shape[3] - self.size) / self.stride + 1))
+
+        if Pooling.v_current is None:
+            Pooling.v_current = Parameter(jnp.zeros(shape=Size))
+        if Pooling.gamma is None:
+            Pooling.gamma = Parameter(jnp.zeros(shape=Size))
+        if Pooling.spike_list is None:
+            Pooling.spike_list = jnp.zeros(shape=Size)
+        out = F.pooling(input=input, size=self.size, time_step=time,
+                        weights=self.weight, spike_list=Pooling.spike_list,
+                        v_current=Pooling.v_current, gamma=Pooling.gamma, tau_m=self.tau_m,
+                        Vth=self.Vth, dt=self.dt, stride=self.stride)
+        Pooling.gamma = None
+        Pooling.spike_list = None
+        Pooling.v_current = None
+
+        return out, time + self.dt * self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
