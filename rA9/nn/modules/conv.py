@@ -34,7 +34,7 @@ class Conv2d(Module):
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input, time):
-
+        #print(self.weight.data)
         Size = (input.data.shape[0], self.out_channels,
                 int(input.data.shape[2] - self.kernel + self.padding * 2 / self.stride + 1)
                 , int(input.data.shape[3] - self.kernel + self.padding * 2 / self.stride + 1))

@@ -55,10 +55,10 @@ def pool_forward(X, W, size=2, stride=2):
 
     X_col = np.array(X_col)
     max_idx_X = np.mean(X_col, axis=0, dtype=int)
-    n_filter,h_filter,w_filter =W.shape
+    n_filter,v,h_filter,w_filter =W.shape
     W_col = W.reshape(n_filter,-1)
 
-    X_col = jnp.matmul(W_col,X_col)
+    X_col = np.matmul(W_col,X_col)
     out = np.array(X_col[max_idx_X, range(max_idx_X.size)])
     out = out.reshape(h_out, w_out, n, d)
 

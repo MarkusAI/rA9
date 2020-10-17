@@ -11,8 +11,9 @@ class Pooling(Module):
         super(Pooling, self).__init__()
         self.size = size
         self.stride = stride
+        self.kernel =(size,size)
 
-        self.weight = Parameter(jnp.zeros(channel, size, size))
+        self.weight = Parameter(jnp.ones((channel,1)+self.kernel))
         Pooling.v_current = None
         Pooling.gamma = None
         Pooling.spike_list = None
@@ -23,7 +24,7 @@ class Pooling(Module):
 
     def forward(self, input, time):
         insize = input.data
-
+        #print(self.weight.data)
         Size = (insize.shape[0], insize.shape[1],
                 int((insize.shape[2] - self.size) / self.stride + 1),
                 int((insize.shape[3] - self.size) / self.stride + 1))

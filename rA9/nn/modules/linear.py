@@ -26,6 +26,7 @@ class Linear(Module):
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input, time):
+        #print(self.weight.data)
         if Linear.spike_list is None:
             Linear.spike_list = jnp.zeros(shape=(self.out_features, input.data.shape[0]))
         if Linear.gamma is None:

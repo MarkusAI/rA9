@@ -44,7 +44,7 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
                          shuffle=False,
                          batch_size=batch_size)
 
-optimizer = Adam(model.parameters())
+optimizer = Adam(model.parameters(),lr=0.1)
 model.train()
 train_loss = []
 
