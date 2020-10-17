@@ -10,9 +10,10 @@ class Linear(Module):
         self.in_features = in_features
         self.out_features = out_features
         self.weight = Parameter(jnp.zeros(shape=(out_features, in_features)))
-        self.v_current = Parameter(jnp.zeros(shape=(1, in_features)))
-        self.gamma = Parameter(jnp.zeros(shape=(1, in_features)))
-        self.spike_list = None
+
+        Linear.v_current = None
+        Linear.gamma = None
+        Linear.spike_list = None
         self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
@@ -25,16 +26,23 @@ class Linear(Module):
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input, time):
-        if self.spike_list is None:
-            jnp.zeros(shape=(1, self.in_features))
-
-        return F.linear(input=input, time_step=time, weights=self.weight,
-                        v_current=self.v_current, gamma=self.gamma,
-                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
-                        spike_list=self.spike_list), time + self.dt*self.time_step
+        #print(self.weight.data)
+        if Linear.spike_list is None:
+            Linear.spike_list = jnp.zeros(shape=(self.out_features, input.data.shape[0]))
+        if Linear.gamma is None:
+            Linear.gamma = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
+        if Linear.v_current is None:
+            Linear.v_current = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
+        out = F.linear(input=input, time_step=time, weights=self.weight,
+                       v_current=Linear.v_current, gamma=Linear.gamma,
+                       tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
+                       spike_list=Linear.spike_list)
+        Linear.spike_list = None
+        Linear.gamma=None
+        Linear.v_current=None
+        return out, time + self.dt * self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
-
