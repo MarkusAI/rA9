@@ -10,6 +10,8 @@ class Variable(object):
         self.grad = None
         self.grad_fn = grad_fn
         self.gamma = gamma
+
+
         self.requires_grad = requires_grad
 
     def grad_fill_zero(self):
@@ -47,6 +49,7 @@ class Variable(object):
         return self._add(other)
 
     def view(self, *sizes):
+
         return View.apply(self, sizes)
 
     def __add__(self, other):
@@ -69,4 +72,3 @@ class Variable(object):
 
 
 from ._functions import *
-
