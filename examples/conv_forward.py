@@ -3,7 +3,7 @@ from rA9.optim import Adam
 from rA9.autograd import Variable
 from rA9.nn.modules import Module
 import rA9.nn.functional as F
-from example.data_mnist import MnistDataset, collate_fn
+from data_mnist import MnistDataset, collate_fn
 from rA9.utils.data import DataLoader
 from rA9.utils import PoissonEncoder
 
