@@ -5,11 +5,10 @@ from jax.ops import index_add, index
 from jax.lax import index_take
 from rA9.autograd import Function
 from rA9.autograd import Variable
+from ..spike import Spike
 import jax.numpy as jnp
-import numpy as np
 
 
-# if we use this modules, we need to have a weights, so I had multipled with weights and those ones
 class Pooling(Function):
     id = "Pooling"
 
@@ -35,6 +34,7 @@ class Pooling(Function):
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
+        spiky = Spike(spike_time)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 
@@ -53,15 +53,15 @@ def pool_forward(X, W, size=2, stride=2):
 
     X_col = im2col_indices(X_reshaped, size, size, padding=0, stride=stride)
 
-    X_col = np.array(X_col)
-    max_idx_X = np.mean(X_col, axis=0, dtype=int)
-    n_filter,v,h_filter,w_filter =W.shape
-    W_col = W.reshape(n_filter,-1)
+    max_idx_X = jnp.mean(X_col, axis=0, dtype='int32')
+    n_filter, v, h_filter, w_filter = W.shape
+    W_col = W.reshape(n_filter, -1)
 
-    X_col = np.matmul(W_col,X_col)
-    out = np.array(X_col[max_idx_X, range(max_idx_X.size)])
+    X_col = jnp.matmul(W_col, X_col)
+
+    out = jnp.array(jnp.take(X_col, max_idx_X))
     out = out.reshape(h_out, w_out, n, d)
 
-    out = np.transpose(out, (2, 3, 0, 1))
-    out = jnp.array(out)
+    out = jnp.transpose(out, (2, 3, 0, 1))
+    out = jnp.array(out,dtype='float32')
     return out

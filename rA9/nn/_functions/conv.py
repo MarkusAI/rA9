@@ -4,7 +4,7 @@ from .lif import jnp_fn
 from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax.ops import index, index_add
-
+from rA9.nn.spike import Spike
 
 class Conv2d(Function):
     id = "Conv2d"
@@ -30,6 +30,7 @@ class Conv2d(Function):
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
+        spiky = Spike(spike_time)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 
@@ -44,9 +45,6 @@ def conv_forward(X, W, stride=1, padding=0):
     n_x, d_x, h_x, w_x = X.shape
     h_out = (h_x - h_filter + 2 * padding) / stride + 1
     w_out = (w_x - w_filter + 2 * padding) / stride + 1
-
-    if not h_out.is_integer() or not w_out.is_integer():
-        raise Exception('Invalid output dimension!')
 
     h_out, w_out = int(h_out), int(w_out)
 

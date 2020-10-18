@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from .module import Module
 from .. import functional as F
 from rA9.nn.parameter import Parameter
-
+from rA9.autograd.variable import Variable
 
 class Linear(Module):
     def __init__(self, in_features, out_features, tau_m=0.1, Vth=1, dt=1):
@@ -30,9 +30,9 @@ class Linear(Module):
         if Linear.spike_list is None:
             Linear.spike_list = jnp.zeros(shape=(self.out_features, input.data.shape[0]))
         if Linear.gamma is None:
-            Linear.gamma = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
+            Linear.gamma = Variable(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
         if Linear.v_current is None:
-            Linear.v_current = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
+            Linear.v_current = Variable(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
         out = F.linear(input=input, time_step=time, weights=self.weight,
                        v_current=Linear.v_current, gamma=Linear.gamma,
                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,

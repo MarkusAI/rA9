@@ -4,6 +4,7 @@ from .lif import jnp_fn
 from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax.ops import index, index_add
+from ..spike import Spike
 
 
 class Linear(Function):
@@ -35,6 +36,7 @@ class Linear(Function):
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
+        spiky = Spike(spike_time)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 

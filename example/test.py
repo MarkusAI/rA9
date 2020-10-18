@@ -44,7 +44,6 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
                          shuffle=False,
                          batch_size=batch_size)
 
-optimizer = Adam(model.parameters(),lr=0.1)
 model.train()
 train_loss = []
 
@@ -56,8 +55,11 @@ for epoch in range(15):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q)
-            optimizer.zero_grad()
+
             output = model(data)
+
+            optimizer = Adam(model.parameters(), model.spikes(), lr=0.1)
+            optimizer.zero_grad()
             loss = F.Spikeloss(output, target, time_step=t + 1)
             loss.backward()  # calc gradients
             train_loss.append(loss.data)
