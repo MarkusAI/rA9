@@ -39,9 +39,6 @@ class Pooling(Module):
                         weights=self.weight, spike_list=Pooling.spike_list,
                         v_current=Pooling.v_current, gamma=Pooling.gamma, tau_m=self.tau_m,
                         Vth=self.Vth, dt=self.dt, stride=self.stride)
-        Pooling.gamma = None
-        Pooling.spike_list = None
-        Pooling.v_current = None
 
         return out, time + self.dt * self.time_step
 
