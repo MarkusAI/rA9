@@ -1,7 +1,8 @@
+  
 from .module import Module
 from .. import functional as F
 from rA9.nn.parameter import Parameter
-
+from rA9.autograd.variable import Variable
 import jax.numpy as jnp
 
 
@@ -13,7 +14,7 @@ class Conv2d(Module):
         self.out_channels = out_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.kernel = kernel_size
-        self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size))
+        self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size,dtype='float32'))
         Conv2d.v_current = None
         Conv2d.gamma = None
         Conv2d.spike_list = None
@@ -40,11 +41,11 @@ class Conv2d(Module):
                 , int(input.data.shape[3] - self.kernel + self.padding * 2 / self.stride + 1))
 
         if Conv2d.v_current is None:
-            Conv2d.v_current = Parameter(jnp.zeros(shape=Size))
+            Conv2d.v_current = Variable(jnp.zeros(shape=Size,dtype='float32'))
         if Conv2d.gamma is None:
-            Conv2d.gamma = Parameter(jnp.zeros(shape=Size))
+            Conv2d.gamma = Variable(jnp.zeros(shape=Size,dtype='float32'))
         if Conv2d.spike_list is None:
-            Conv2d.spike_list = Parameter(jnp.zeros(shape=Size))
+            Conv2d.spike_list = jnp.zeros(shape=Size,dtype='float32')
         out = F.conv2d(input=input, time_step=time, weights=self.weight,
                        v_current=Conv2d.v_current, gamma=Conv2d.gamma,
                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
