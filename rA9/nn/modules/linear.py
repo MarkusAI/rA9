@@ -28,7 +28,7 @@ class Linear(Module):
     def forward(self, input, time):
         #print(self.weight.data)
         if Linear.spike_list is None:
-            Linear.spike_list = jnp.zeros(shape=(self.out_features, input.data.shape[0]))
+            Linear.spike_list = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
         if Linear.gamma is None:
             Linear.gamma = Parameter(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
         if Linear.v_current is None:
