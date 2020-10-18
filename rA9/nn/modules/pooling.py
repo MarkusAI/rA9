@@ -34,7 +34,7 @@ class Pooling(Module):
         if Pooling.gamma is None:
             Pooling.gamma = Parameter(jnp.zeros(shape=Size))
         if Pooling.spike_list is None:
-            Pooling.spike_list = jnp.zeros(shape=Size)
+            Pooling.spike_list = Parameter(jnp.zeros(shape=Size))
         out = F.pooling(input=input, size=self.size, time_step=time,
                         weights=self.weight, spike_list=Pooling.spike_list,
                         v_current=Pooling.v_current, gamma=Pooling.gamma, tau_m=self.tau_m,
