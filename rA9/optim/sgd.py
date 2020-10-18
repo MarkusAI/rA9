@@ -7,7 +7,7 @@ class SGD(Optimizer):
 
     def __init__(self, params, lr=1e-3):
         defaults = dict(lr=lr)
-        super(Adam, self).__init__(params, defaults)
+        super(SGD, self).__init__(params, defaults)
 
     def step(self, closure=None):
         """Performs a single optimization step.
