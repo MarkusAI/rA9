@@ -12,8 +12,8 @@ batch_size = 1
 class SNN(Module):
     def __init__(self):
         super(SNN, self).__init__()
-        self.fc1 = nn.Linear(out_features=784, in_features=100)
-        self.fc2 = nn.Linear(out_features=100, in_features=10)
+        self.fc1 = nn.Linear(in_features=784, out_features=100)
+        self.fc2 = nn.Linear(in_features=100, out_features=10)
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time=1):
