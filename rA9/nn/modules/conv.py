@@ -44,7 +44,7 @@ class Conv2d(Module):
         if Conv2d.gamma is None:
             Conv2d.gamma = Parameter(jnp.zeros(shape=Size))
         if Conv2d.spike_list is None:
-            Conv2d.spike_list = jnp.zeros(shape=Size)
+            Conv2d.spike_list = Parameter(jnp.zeros(shape=Size))
         out = F.conv2d(input=input, time_step=time, weights=self.weight,
                        v_current=Conv2d.v_current, gamma=Conv2d.gamma,
                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
