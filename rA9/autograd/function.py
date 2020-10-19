@@ -113,7 +113,7 @@ class Function(with_metaclass(FunctionMeta)):
     def backward(ctx, grad_outputs):
         if len(ctx.np_args)==3:
             np_args = ctx.np_args
-            grads = loss_grad(*np_args)
+            grads = loss_grad(np_args[0],np_args[1],np_args[2])
             return grads
         else:
             np_args = ctx.np_args
