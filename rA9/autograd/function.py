@@ -109,14 +109,14 @@ class Function(with_metaclass(FunctionMeta)):
 
         raise NotImplementedError
 
-    @staticmethod
-    def backward(ctx, grad_outputs):
-        if getattr(ctx(), 'id') == 'Spikeloss':
-            np_args = ctx.np_args
+    @classmethod
+    def backward(cls, grad_outputs):
+        if getattr(cls(), 'id') == 'Spikeloss':
+            np_args = cls.np_args
             grads = loss_grad(*np_args)
             return grads
         else:
-            np_args = ctx.np_args
+            np_args = cls.np_args
             grads = lif_grad(grad_outputs, *np_args)
             return grads
 
