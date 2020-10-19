@@ -9,7 +9,6 @@ from jax.ops import index, index_add
 
 class Linear(Function):
     id = "Linear"
-    self.id = "Linear"
     @staticmethod
 
     def forward(ctx, input, time_step, weights, spike_time, v_current, gamma, tau_m, Vth, dt):
