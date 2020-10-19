@@ -17,7 +17,7 @@ class Spikeloss(Function):
 
         # target.data -> jnp.array is none..
 
-        np_args = (input.data, target.data, time_step)
+        np_args = (target.data, time_step)
         return np_fn, np_args, np_fn(*np_args)
 
     @classmethod
