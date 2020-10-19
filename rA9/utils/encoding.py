@@ -33,7 +33,7 @@ class PoissonEncoder(object):
         del intervals_p
 
         # Calculate spike times by cumulatively summing over time dimension.
-        times_p = jnp.cumsum(intervals, dtype=float)
+        times_p = jnp.cumsum(intervals, dtype='float32')
         times_p = times_p.reshape((-1, size))
         times = index_update(times_p, times_p >= time + 1, 0).astype(jnp.int32)
         del times_p
