@@ -20,6 +20,6 @@ class Spikeloss(Function):
         np_args = (input.data, target.data, time_step)
         return np_fn, np_args, np_fn(*np_args)
 
-    @staticmethod
-    def backward(ctx, grad_outputs):
-        return super(Spikeloss, Spikeloss).backward(ctx, grad_outputs)
+    @classmethod
+    def backward(cls, grad_outputs):
+        return super(Spikeloss, Spikeloss).backward(cls, grad_outputs)
