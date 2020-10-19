@@ -14,12 +14,16 @@ class Optimizer(object):
                             rA9.typename(spikes))
 
         self.state = defaultdict(dict)
+        self.param_groups = list(params)
         self.spike_groups = list(spikes)
         if len(self.spike_groups) == 0:
             raise ValueError("optimizer got an empty spike list")
         if not isinstance(self.spike_groups[0], dict):
             self.spike_groups = [{'spikes': self.spike_groups}]
-
+        if len(self.param_groups) == 0:
+            raise ValueError("optimizer got an empty parameter list")
+        if not isinstance(self.param_groups[0], dict):
+            self.param_groups = [{'params': self.param_groups}]
         spike_set = set()
         for sgroup in self.spike_groups:
             if isinstance(sgroup['spikes'], Variable):
@@ -60,10 +64,7 @@ class Optimizer(object):
                             "an iterable of Variables or dicts, but got " +
                             rA9.typename(params))
 
-        self.state = defaultdict(dict)
-        self.param_groups = list(params)
-        if len(self.param_groups) == 0:
-            raise ValueError("optimizer got an empty parameter list")
+
         if not isinstance(self.param_groups[0], dict):
             self.param_groups = [{'params': self.param_groups}]
 

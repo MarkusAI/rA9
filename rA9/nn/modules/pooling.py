@@ -3,7 +3,7 @@ from .. import functional as F
 from rA9.nn.parameter import Parameter
 from rA9.autograd.variable import Variable
 import jax.numpy as jnp
-
+from ..spike import Spike
 
 class Pooling(Module):
 
@@ -16,7 +16,7 @@ class Pooling(Module):
         self.weight = Parameter(jnp.zeros((channel, 1) + self.kernel))
         Pooling.v_current = None
         Pooling.gamma = None
-        Pooling.spike_list = None
+        self.spike = Spike(jnp.zeros((channel,1)+self.kernel))
         self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
@@ -39,14 +39,12 @@ class Pooling(Module):
             Pooling.v_current = Variable(jnp.zeros(shape=Size))
         if Pooling.gamma is None:
             Pooling.gamma = Variable(jnp.zeros(shape=Size))
-        if Pooling.spike_list is None:
-            Pooling.spike_list = jnp.zeros(shape=Size)
+
         out = F.pooling(input=input, size=self.size, time_step=time,
-                        weights=self.weight, spike_list=Pooling.spike_list,
+                        weights=self.weight, spike_list=self.spike,
                         v_current=Pooling.v_current, gamma=Pooling.gamma, tau_m=self.tau_m,
                         Vth=self.Vth, dt=self.dt, stride=self.stride)
         Pooling.gamma = None
-        Pooling.spike_list = None
         Pooling.v_current = None
 
         return out, time + self.dt * self.time_step

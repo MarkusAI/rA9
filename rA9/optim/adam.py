@@ -21,11 +21,11 @@ class Adam(Optimizer):
         if closure is not None:
             loss = closure()
 
-        for group,sgroup in self.param_groups,self.spike_groups:
-            for p,s in group['params'],sgroup['spikes']:
+        for group,sgroup in zip(self.param_groups,self.spike_groups):
+            for p,s in zip(group['params'],sgroup['spikes']):
                 if p.grad is None:
                     continue
-                grad = p.grad
+                grad = jnp.matmul(p.grad,s.data)
                 state = self.state[p]
 
                 # State initialization
@@ -42,7 +42,8 @@ class Adam(Optimizer):
                 state['step'] += 1
 
                 if group['weight_decay'] != 0:
-                    grad += group['weight_decay'] * p.data*s.data
+                    grad += group['weight_decay'] * p.data
+
 
                 # Decay the first and second moment running average coefficient
                 exp_avg = exp_avg * beta1 + (1 - beta1) * grad
