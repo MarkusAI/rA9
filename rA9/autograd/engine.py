@@ -11,7 +11,7 @@ def excute(fn, grad_in=None):
                 if fn.variable.grad is None:
                     fn.variable.grad = jnp.zeros(fn.variable.data.shape)
 
-                index_add(fn.variable.grad, index[:], grad_in)
+                fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
             return
 
         grad_outs = fn.apply(grad_in)
