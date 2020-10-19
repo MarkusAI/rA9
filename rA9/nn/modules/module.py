@@ -2,24 +2,42 @@ from collections import OrderedDict
 
 import rA9
 from ..parameter import Parameter
+from ..spike import Spike
 
 
 class Module(object):
     def __init__(self):
+        self._spikes = OrderedDict()
         self._parameters = OrderedDict()
         self._modules = OrderedDict()
         self.training = True
 
     def forward(self, *input):
-        """Defines the computation performed at every call.
-        Should be overriden by all subclasses.
-        """
+
         raise NotImplementedError
 
+    def register_spike(self, name, spike):
+        if '_spikes' not in self.__dict__:
+            raise AttributeError(
+                "cannot assign spike before Module.__init__() call")
+        if spike is None:
+            self._spikes[name] = None
+        elif not isinstance(spike, Spike):
+            raise TypeError("cannot assign '{}' object to spike '{}' "
+                            "(rA9.nn.spike or None required)"
+                            .format(rA9.typename(spike), name))
+
+        elif spike.grad_fn:
+            raise ValueError(
+                "Cannot assign non-leaf Variable to spike '{0}'. Model "
+                "spikes must be created explicitly. To express '{0}' "
+                "as a function of another variable, compute the value in "
+                "the forward() method.".format(name))
+
+        else:
+            self._spikes[name] = spike
+
     def register_parameter(self, name, param):
-        """Adds a parameter to the module.
-        The parameter can be accessed as an attribuete using given name.
-        """
         if '_parameters' not in self.__dict__:
             raise AttributeError(
                 "cannot assign parameter before Module.__init__() call")
@@ -41,9 +59,7 @@ class Module(object):
             self._parameters[name] = param
 
     def add_module(self, name, module):
-        """Adds a child module to the current module.
-        The module can be accessed as an attribute using the given name.
-        """
+
         if hasattr(self, name):
             raise KeyError("attribute already exists '{}'".format(name))
         if not isinstance(module, Module) and module is not None:
@@ -63,6 +79,12 @@ class Module(object):
                 if param._grad is not None:
                     param._grad.data = fn(param._grad.data)
 
+        for spike in self._spikes.values():
+            if spike is not None:
+                # Variables stored in modules are graph leaves, and we don't
+                # want to create copy nodes, so we have to unpack the data.
+                spike.data = fn(spike.data)
+
         for key, buf in self._buffers.items():
             if buf is not None:
                 self._buffers[key] = fn(buf)
@@ -80,6 +102,10 @@ class Module(object):
             _parameters = self.__dict__['_parameters']
             if name in _parameters:
                 return _parameters[name]
+        if '_spikes' in self.__dict__:
+            _spikes = self.__dict__['_spikes']
+            if name in _spikes:
+                return _spikes[name]
         if '_buffers' in self.__dict__:
             _buffers = self.__dict__['_buffers']
             if name in _buffers:
@@ -96,6 +122,20 @@ class Module(object):
             for d in dicts:
                 if name in d:
                     del d[name]
+
+        spikes = self.__dict__.get("_spikes")
+        if isinstance(value, Spike):
+            if spikes is None:
+                raise AttributeError(
+                    "cannot assign spikes before Module.__init__() call")
+            # remove_from(self.__dict__, self._buffers, self._modules)
+            self.register_spike(name, value)
+        elif spikes is not None and name in spikes:
+            if value is not None:
+                raise TypeError("cannot assign '{}' as spike '{}' "
+                                "(rA9.nn.spike or None expected)"
+                                .format(rA9.typename(value), name))
+            self.register_spike(name, value)
 
         params = self.__dict__.get('_parameters')
         if isinstance(value, Parameter):
@@ -142,29 +182,32 @@ class Module(object):
             del self._buffers[name]
         elif name in self._modules:
             del self._modules[name]
+        elif name in self._spikes:
+            del self._spikes[name]
         else:
             object.__delattr__(self, name)
 
+    def spikes(self):
+        for name, spike in self.named_spikes():
+            yield spike
+
     def parameters(self):
-        """Returns an iterator over module parameters.
-        This is typically passed to an optimizer.
-        Example:
-            >>> for param in model.parameters():
-            >>>     print(type(param.data), param.size())
-            <class 'torch.FloatTensor'> (20L,)
-            <class 'torch.FloatTensor'> (20L, 1L, 5L, 5L)
-        """
         for name, param in self.named_parameters():
             yield param
 
+    def named_spikes(self, memo=None, prefix=''):
+        if memo is None:
+            memo = set()
+        for name, p in self._spikes.items():
+            if p is not None and p not in memo:
+                memo.add(p)
+                yield prefix + ('.' if prefix else '') + name, p
+        for mname, module in self.named_children():
+            submodule_prefix = prefix + ('.' if prefix else '') + mname
+            for name, p in module.named_spikes(memo, submodule_prefix):
+                yield name, p
+
     def named_parameters(self, memo=None, prefix=''):
-        """Returns an iterator over module parameters, yielding both the
-        name of the parameter as well as the parameter itself
-        Example:
-            >>> for name, param in self.named_parameters():
-            >>>    if name in ['bias']:
-            >>>        print(param.size())
-        """
         if memo is None:
             memo = set()
         for name, p in self._parameters.items():
@@ -182,13 +225,7 @@ class Module(object):
             yield module
 
     def named_children(self):
-        """Returns an iterator over immediate children modules, yielding both
-        the name of the module as well as the module itself.
-        Example:
-            >>> for name, module in model.named_children():
-            >>>     if name in ['conv4', 'conv5']:
-            >>>         print(module)
-        """
+
         memo = set()
         for name, module in self._modules.items():
             if module is not None and module not in memo:
@@ -196,39 +233,11 @@ class Module(object):
                 yield name, module
 
     def modules(self):
-        """Returns an iterator over all modules in the network.
-        Note:
-            Duplicate modules are returned only once. In the following
-            example, ``l`` will be returned only once.
-            >>> l = nn.Linear(2, 2)
-            >>> net = nn.Sequential(l, l)
-            >>> for idx, m in enumerate(net.modules()):
-            >>>     print(idx, '->', m)
-            0 -> Sequential (
-              (0): Linear (2 -> 2)
-              (1): Linear (2 -> 2)
-            )
-            1 -> Linear (2 -> 2)
-        """
+
         for name, module in self.named_modules():
             yield module
 
     def named_modules(self, memo=None, prefix=''):
-        """Returns an iterator over all modules in the network, yielding
-        both the name of the module as well as the module itself.
-        Note:
-            Duplicate modules are returned only once. In the following
-            example, ``l`` will be returned only once.
-            >>> l = nn.Linear(2, 2)
-            >>> net = nn.Sequential(l, l)
-            >>> for idx, m in enumerate(net.named_modules()):
-            >>>     print(idx, '->', m)
-            0 -> ('', Sequential (
-              (0): Linear (2 -> 2)
-              (1): Linear (2 -> 2)
-            ))
-            1 -> ('0', Linear (2 -> 2))
-        """
 
         if memo is None:
             memo = set()
@@ -243,16 +252,11 @@ class Module(object):
                     yield m
 
     def train(self, mode=True):
-        """Sets the module in training mode.
-        This has any effect only on modules such as Dropout or BatchNorm.
-        """
         self.training = mode
         for module in self.children():
             module.train(mode)
         return self
 
     def eval(self):
-        """Sets the module in evaluation mode.
-        This has any effect only on modules such as Dropout or BatchNorm.
-        """
+
         return self.train(False)

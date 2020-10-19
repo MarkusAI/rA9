@@ -15,6 +15,7 @@ class Sampler(object):
 
 class SequentialSampler(Sampler):
     """Samples elements sequentially, always in the same order.
+
     Arguments:
         data_source (Dataset): dataset to sample from
     """
@@ -31,6 +32,7 @@ class SequentialSampler(Sampler):
 
 class RandomSampler(Sampler):
     """Samples elements randomly, without replacement.
+
     Arguments:
         data_source (Dataset): dataset to sample from
     """
@@ -47,11 +49,13 @@ class RandomSampler(Sampler):
 
 class BatchSampler(object):
     """Wraps another sampler to yield a mini-batch of indices.
+
     Args:
         sampler (Sampler): Base sampler.
         batch_size (int): Size of mini-batch.
         drop_last (bool): If ``True``, the sampler will drop the last batch if
             its size would be less than ``batch_size``
+
     Example:
         >>> list(BatchSampler(range(10), batch_size=3, drop_last=False))
         [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
