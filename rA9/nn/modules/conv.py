@@ -1,4 +1,3 @@
-  
 from .module import Module
 from .. import functional as F
 from rA9.nn.parameter import Parameter
