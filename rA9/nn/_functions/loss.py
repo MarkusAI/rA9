@@ -5,7 +5,7 @@ from rA9.autograd import Variable
 
 class Spikeloss(Function):
     id = "Spikeloss"
-
+    self.id = "Spikeloss"
     @staticmethod
     def forward(ctx, input, target, time_step):
         assert isinstance(input, Variable)
@@ -20,6 +20,6 @@ class Spikeloss(Function):
         np_args = (input.data, target.data, time_step)
         return np_fn, np_args, np_fn(*np_args)
 
-    @classmethod
-    def backward(cls, grad_outputs):
-        return super(Spikeloss, Spikeloss).backward(cls, grad_outputs)
+    @staticmethod
+    def backward(ctx, grad_outputs):
+        return super(Spikeloss, Spikeloss).backward(ctx, grad_outputs)
