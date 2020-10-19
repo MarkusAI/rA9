@@ -4,7 +4,7 @@ from rA9.autograd import Variable
 
 
 class Spikeloss(Function):
-    id = "Spikeloss"
+    self.id = "Spikeloss"
 
     @staticmethod
     def forward(ctx, input, target, time_step):
