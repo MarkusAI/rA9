@@ -3,7 +3,7 @@ from .. import functional as F
 from rA9.nn.parameter import Parameter
 from rA9.autograd.variable import Variable
 import jax.numpy as jnp
-from ..spike import Spike
+from collections import OrderedDict
 
 
 class Conv2d(Module):
@@ -17,7 +17,7 @@ class Conv2d(Module):
         self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size, dtype='float32'))
         Conv2d.v_current = None
         Conv2d.gamma = None
-        self.spike = Spike(jnp.zeros((out_channels, in_channels) + self.kernel_size))
+        Conv2d.spike = None
         self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
@@ -34,7 +34,7 @@ class Conv2d(Module):
 
         self.weight.uniform(-stdv, stdv)
 
-    def forward(self, input, time):
+    def forward(self, input, time,spikel):
         # print(self.weight.data)
         Size = (input.data.shape[0], self.out_channels,
                 int(input.data.shape[2] - self.kernel + self.padding * 2 / self.stride + 1)
@@ -44,15 +44,24 @@ class Conv2d(Module):
             Conv2d.v_current = Variable(jnp.zeros(shape=Size, dtype='float32'))
         if Conv2d.gamma is None:
             Conv2d.gamma = Variable(jnp.zeros(shape=Size, dtype='float32'))
+        if Conv2d.spike is None:
+            Conv2d.spike = jnp.zeros(shape=Size)
 
         out = F.conv2d(input=input, time_step=time, weights=self.weight,
                        v_current=Conv2d.v_current, gamma=Conv2d.gamma,
                        tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
-                       spike_list=self.spike, stride=self.stride, padding=self.padding)
+                       spike_list=Conv2d.spike, stride=self.stride, padding=self.padding)
         Conv2d.v_current = None
         Conv2d.gamma = None
+        Conv2d.spike = None
 
-        return out, time + self.dt * self.time_step
+        if spikel is None:
+            spikel = OrderedDict()
+            spikel.update({time: out})
+        else:
+            spikel.update({time: out})
+
+        return out, time + self.dt * self.time_step,spikel
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \

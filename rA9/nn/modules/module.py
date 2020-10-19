@@ -2,12 +2,10 @@ from collections import OrderedDict
 
 import rA9
 from ..parameter import Parameter
-from ..spike import Spike
 
 
 class Module(object):
     def __init__(self):
-        self._spikes = OrderedDict()
         self._parameters = OrderedDict()
         self._modules = OrderedDict()
         self.training = True
@@ -15,27 +13,6 @@ class Module(object):
     def forward(self, *input):
 
         raise NotImplementedError
-
-    def register_spike(self, name, spike):
-        if '_spikes' not in self.__dict__:
-            raise AttributeError(
-                "cannot assign spike before Module.__init__() call")
-        if spike is None:
-            self._spikes[name] = None
-        elif not isinstance(spike, Spike):
-            raise TypeError("cannot assign '{}' object to spike '{}' "
-                            "(rA9.nn.spike or None required)"
-                            .format(rA9.typename(spike), name))
-
-        elif spike.grad_fn:
-            raise ValueError(
-                "Cannot assign non-leaf Variable to spike '{0}'. Model "
-                "spikes must be created explicitly. To express '{0}' "
-                "as a function of another variable, compute the value in "
-                "the forward() method.".format(name))
-
-        else:
-            self._spikes[name] = spike
 
     def register_parameter(self, name, param):
         if '_parameters' not in self.__dict__:
@@ -79,12 +56,6 @@ class Module(object):
                 if param._grad is not None:
                     param._grad.data = fn(param._grad.data)
 
-        for spike in self._spikes.values():
-            if spike is not None:
-                # Variables stored in modules are graph leaves, and we don't
-                # want to create copy nodes, so we have to unpack the data.
-                spike.data = fn(spike.data)
-
         for key, buf in self._buffers.items():
             if buf is not None:
                 self._buffers[key] = fn(buf)
@@ -102,10 +73,6 @@ class Module(object):
             _parameters = self.__dict__['_parameters']
             if name in _parameters:
                 return _parameters[name]
-        if '_spikes' in self.__dict__:
-            _spikes = self.__dict__['_spikes']
-            if name in _spikes:
-                return _spikes[name]
         if '_buffers' in self.__dict__:
             _buffers = self.__dict__['_buffers']
             if name in _buffers:
@@ -122,20 +89,6 @@ class Module(object):
             for d in dicts:
                 if name in d:
                     del d[name]
-
-        spikes = self.__dict__.get("_spikes")
-        if isinstance(value, Spike):
-            if spikes is None:
-                raise AttributeError(
-                    "cannot assign spikes before Module.__init__() call")
-            # remove_from(self.__dict__, self._buffers, self._modules)
-            self.register_spike(name, value)
-        elif spikes is not None and name in spikes:
-            if value is not None:
-                raise TypeError("cannot assign '{}' as spike '{}' "
-                                "(rA9.nn.spike or None expected)"
-                                .format(rA9.typename(value), name))
-            self.register_spike(name, value)
 
         params = self.__dict__.get('_parameters')
         if isinstance(value, Parameter):
@@ -182,30 +135,12 @@ class Module(object):
             del self._buffers[name]
         elif name in self._modules:
             del self._modules[name]
-        elif name in self._spikes:
-            del self._spikes[name]
         else:
             object.__delattr__(self, name)
-
-    def spikes(self):
-        for name, spike in self.named_spikes():
-            yield spike
 
     def parameters(self):
         for name, param in self.named_parameters():
             yield param
-
-    def named_spikes(self, memo=None, prefix=''):
-        if memo is None:
-            memo = set()
-        for name, p in self._spikes.items():
-            if p is not None and p not in memo:
-                memo.add(p)
-                yield prefix + ('.' if prefix else '') + name, p
-        for mname, module in self.named_children():
-            submodule_prefix = prefix + ('.' if prefix else '') + mname
-            for name, p in module.named_spikes(memo, submodule_prefix):
-                yield name, p
 
     def named_parameters(self, memo=None, prefix=''):
         if memo is None:

@@ -3,13 +3,15 @@ from .optimizer import Optimizer
 import jax.numpy as jnp
 import jax.lax as jmath
 
+
 class Adam(Optimizer):
 
-    def __init__(self, params,spikes, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
+    def __init__(self, params, spikes, lr=1e-3, betas=(0.9, 0.999), eps=1e-8,
                  weight_decay=0):
         defaults = dict(lr=lr, betas=betas, eps=eps,
                         weight_decay=weight_decay)
-        super(Adam, self).__init__(params,spikes, defaults)
+        self.spikes = spikes
+        super(Adam, self).__init__(params, defaults)
 
     def step(self, closure=None):
         """Performs a single optimization step.
@@ -21,11 +23,16 @@ class Adam(Optimizer):
         if closure is not None:
             loss = closure()
 
-        for group,sgroup in zip(self.param_groups,self.spike_groups):
-            for p,s in zip(group['params'],sgroup['spikes']):
+        for group in self.param_groups:
+
+            for p in group['params']:
                 if p.grad is None:
+                    grad = p.grad
                     continue
-                grad = jnp.matmul(p.grad,s.data)
+                else:
+                    s = self.spikes.popitem()
+                    grad = jnp.matmul(p.grad, s.data)
+
                 state = self.state[p]
 
                 # State initialization
@@ -43,7 +50,6 @@ class Adam(Optimizer):
 
                 if group['weight_decay'] != 0:
                     grad += group['weight_decay'] * p.data
-
 
                 # Decay the first and second moment running average coefficient
                 exp_avg = exp_avg * beta1 + (1 - beta1) * grad

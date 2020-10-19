@@ -4,7 +4,6 @@ from .lif import jnp_fn
 from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax.ops import index, index_add
-from rA9.nn.spike import Spike
 
 class Conv2d(Function):
     id = "Conv2d"
@@ -20,7 +19,8 @@ class Conv2d(Function):
             inv_current = conv_forward(input_np, weights_np, stride, padding)
 
             spike_list, v_current_n = jit(jnp_fn)(x=inv_current, v_current=v_current_np,
-                                                  tau_m=tau_m, Vth=Vth, dt=dt)
+                                                  tau_m=tau_m, Vth
+                                                  =Vth, dt=dt)
 
             return spike_list, v_current_n, index_add(gamma_np, index[:], spike_list)
 
@@ -30,7 +30,6 @@ class Conv2d(Function):
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
-        spiky = Spike(spike_time)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 
