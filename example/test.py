@@ -15,21 +15,21 @@ class SNN(Module):
         super(SNN, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=10, kernel_size=5)
         self.conv2 = nn.Conv2d(in_channels=10, out_channels=20, kernel_size=5)
-        self.pool1 = nn.Pooling(size=2,channel=10)
-        self.pool2 = nn.Pooling(size=2,channel=20)
+        self.pool1 = nn.Pooling(size=2, channel=10)
+        self.pool2 = nn.Pooling(size=2, channel=20)
         self.fc1 = nn.Linear(out_features=50, in_features=320)
         self.fc2 = nn.Linear(out_features=10, in_features=50)
         self.output = nn.Output(out_features=10)
 
-    def forward(self, x, time=1):
-        x, time = self.conv1(x, time)
-        x, time = self.pool1(x,time)
-        x, time = self.conv2(x, time)
-        x,time = self.pool2(x,time)
-        x = Variable(x.data.reshape(-1,320))
-        x, time = self.fc1(x, time)
-        x, time = self.fc2(x, time)
-        return self.output(x, time)
+    def forward(self, x, time=1,spike=None):
+        x, time, spike = self.conv1(x, time,spike)
+        x, time, spike = self.pool1(x, time,spike)
+        x, time, spike = self.conv2(x, time,spike)
+        x, time, spike = self.pool2(x, time,spike)
+        x = Variable(x.data.reshape(-1, 320))
+        x, time, spike = self.fc1(x, time,spike)
+        x, time, spike = self.fc2(x, time,spike)
+        return self.output(x, time), spike
 
 
 model = SNN()
@@ -47,18 +47,17 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 model.train()
 train_loss = []
 
-
 for epoch in range(15):
-    pe = PoissonEncoder(duration=50)
+    pe = PoissonEncoder(duration=100)
     model.train()
-    for i,(data, target) in enumerate(train_loader):
+    for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q)
 
-            output = model(data)
+            output, spikes = model.forward(data, t + 1)
 
-            optimizer = Adam(model.parameters(), model.spikes(), lr=0.1)
+            optimizer = Adam(model.parameters(), spikes, lr=0.1)
             optimizer.zero_grad()
             loss = F.Spikeloss(output, target, time_step=t + 1)
             loss.backward()  # calc gradients

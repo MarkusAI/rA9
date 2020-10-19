@@ -5,7 +5,6 @@ from jax.ops import index_add, index
 from jax.lax import index_take
 from rA9.autograd import Function
 from rA9.autograd import Variable
-from ..spike import Spike
 import jax.numpy as jnp
 
 
@@ -34,7 +33,6 @@ class Pooling(Function):
         v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
-        spiky = Spike(spike_time)
         np_grad_args = (weights.data, time_step, spike_time, Vth, gamma, tau_m)
         return np_fn, np_grad_args, spike
 

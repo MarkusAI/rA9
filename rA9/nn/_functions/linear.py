@@ -4,7 +4,7 @@ from .lif import jnp_fn
 from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax.ops import index, index_add
-from ..spike import Spike
+
 
 
 class Linear(Function):

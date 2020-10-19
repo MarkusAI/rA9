@@ -9,10 +9,9 @@ def linear(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, 
     return _functions.Linear.apply(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt)
 
 
-
 def conv2d(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride=1, padding=0):
-
-    return _functions.Conv2d.apply(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride, padding)
+    return _functions.Conv2d.apply(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride,
+                                   padding)
 
 
 def Output(input, weights, v_current, tau_m, dt, time_step):
@@ -24,5 +23,5 @@ def dropout(input, p=0.5, training=False):
 
 
 def pooling(input, size, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride):
-    return _functions.Pooling.apply(input, size, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride)
-
+    return _functions.Pooling.apply(input, size, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt,
+                                    stride)
