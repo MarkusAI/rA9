@@ -10,7 +10,6 @@ import jax.numpy as jnp
 
 class Pooling(Function):
     id = "Pooling"
-    self.id = "Pooling"
     @staticmethod
     def forward(ctx, input, size, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride=2):
         assert isinstance(input, Variable)

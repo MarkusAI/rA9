@@ -8,7 +8,6 @@ from jax.ops import index, index_add
 
 class Conv2d(Function):
     id = "Conv2d"
-    self.id = "Conv2d"
 
     @staticmethod
     def forward(ctx, input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride=1, padding=0):
