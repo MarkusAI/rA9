@@ -111,7 +111,7 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        if getattr(ctx(), 'id') == 'Spikeloss':
+        if len(ctx.np_args)==3:
             np_args = ctx.np_args
             grads = loss_grad(*np_args)
             return grads
