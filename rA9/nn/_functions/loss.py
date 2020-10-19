@@ -11,7 +11,6 @@ class Spikeloss(Function):
         assert isinstance(target, Variable)
 
         def np_fn(input_np, target_np, time_step):
-            input_np = jnp.argmax(input_np)
             return jnp.sum((input_np - target_np) ** 2) / 2
 
         # target.data -> jnp.array is none..
