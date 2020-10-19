@@ -19,7 +19,7 @@ def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
 
     k = jnp.repeat(jnp.arange(C), field_height * field_width).reshape(-1, 1)
 
-    return (k.astype(int), i.astype(int), j.astype(int))
+    return (k.astype('int32'), i.astype('int32'), j.astype('int32'))
 
 
 def im2col_indices(x, field_height, field_width, padding=0, stride=1):
