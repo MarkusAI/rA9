@@ -1,4 +1,3 @@
-
 from .variable import *
 from .LIF_grad import *
 
@@ -102,7 +101,6 @@ class Function(with_metaclass(FunctionMeta)):
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output = cls.forward(grad_fn, *args)
-
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, gamma=args[4], grad_fn=grad_fn)
 
@@ -114,7 +112,8 @@ class Function(with_metaclass(FunctionMeta)):
     @staticmethod
     def backward(ctx, grad_outputs):
         if len(ctx.np_args)==3:
-            np_args = ctx.np_args
+            np_args = ctx.np_arg
+ s
             grads = loss_grad(*np_args)
             return grads
         else:
