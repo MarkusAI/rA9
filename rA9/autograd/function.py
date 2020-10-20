@@ -1,14 +1,8 @@
-
 from .variable import *
 from .LIF_grad import *
 
 
 def with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
-
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
     class metaclass(meta):
 
         def __new__(cls, name, this_bases, d):
@@ -88,6 +82,7 @@ class Function(with_metaclass(FunctionMeta)):
             else:
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
 
+
     @classmethod
     def apply(cls, *args):
         if getattr(cls(), 'id') == 'Spikeloss':
@@ -104,7 +99,7 @@ class Function(with_metaclass(FunctionMeta)):
             np_fn, np_args, output = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output, gamma=args[4], grad_fn=grad_fn)
+            return Variable(data=output,requires_grad=True, gamma=args[4], grad_fn=grad_fn)
 
     @staticmethod
     def forward(*args, **kwargs):
@@ -113,14 +108,17 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        if len(ctx.np_args)==3:
+
+        if len(ctx.np_args) == 3:
             np_args = ctx.np_args
             grads = loss_grad(*np_args)
+
             return grads
+
         else:
-            np_args = ctx.np_args
-            grads = lif_grad(grad_outputs, *np_args)
+            if len(ctx.np_args) ==2:
+                grads = grad_outputs
+            else:
+                np_args = ctx.np_args
+                grads = lif_grad(grad_outputs, *np_args)
             return grads
-
-
-
