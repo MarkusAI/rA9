@@ -24,6 +24,18 @@ class Conv2d(Function):
                                                   =Vth, dt=dt)
 
             return spike_list, v_current_n, index_add(gamma_np, index[:], spike_list)
+        def grad_np_fn(grad_output, weights, spike_list, time_step, Vth, gamma, tau_m):
+            return jnp.multiply(
+                jnp.matmul(weights, grad_output),
+                jnp.multiply(
+                    (1 / Vth),
+                    (1 + jnp.multiply(
+                        jnp.divide((1, gamma), jnp.multiply(jnp.exp(jnp.divide(jnp.subtract(time_step, spike_list), tau_m)),
+                                                        (-1 / tau_m)))
+                    )
+                    )
+                )
+            )
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
         spike, v_current_n, gamma_np = np_fn(*np_args)
@@ -33,7 +45,7 @@ class Conv2d(Function):
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
 
         np_grad_args = (weights.data, spike_time,time_step, Vth, gamma.data, tau_m)
-        return np_fn, np_grad_args, spike
+        return grad_np_fn, np_grad_args, spike
 
     @staticmethod
     def backward(ctx, grad_outputs):
