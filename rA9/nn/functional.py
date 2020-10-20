@@ -14,8 +14,8 @@ def conv2d(input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, 
                                    padding)
 
 
-def Output(input, weights, v_current, tau_m, dt, time_step):
-    return _functions.Output.apply(input, weights, v_current, tau_m, dt, time_step)
+def Output(input, weights, v_current, tau_m, dt, time_step,Vth,gamma):
+    return _functions.Output.apply(input, weights, v_current, tau_m, dt, time_step,Vth,gamma)
 
 
 def dropout(input, p=0.5, training=False):
