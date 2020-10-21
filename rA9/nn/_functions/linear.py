@@ -38,5 +38,4 @@ class Linear(Function):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-
         return super(Linear, Linear).backward(ctx, grad_outputs)

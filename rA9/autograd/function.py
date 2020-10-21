@@ -19,13 +19,6 @@ class BackwardFunction(object):
 
 
 class FunctionMeta(type):
-    """Function metaclass.
-    This metaclass sets up the following properties:
-        _is_legacy: True if forward is not defined as a static method.
-        _backward_cls: The Function class corresponding to the differentiated
-            version of this function (which is generated on the fly by this
-            metaclass).
-    """
 
     def __init__(cls, name, bases, attrs):
         FunctionMeta.grad_fn = None
@@ -52,6 +45,7 @@ class AccumulateGrad:
         self.variable = variable
 
     def apply(self):
+
         pass
 
 
@@ -91,6 +85,7 @@ class Function(with_metaclass(FunctionMeta)):
             grad_fn = backward_cls()
             np_fn, np_args, output = cls.forward(grad_fn, *args)
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
         elif getattr(cls(), 'id') == 'View':
             backward_cls = cls()._backward_cls
@@ -107,6 +102,7 @@ class Function(with_metaclass(FunctionMeta)):
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
+
             np_fn, np_args, output, v_current = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
@@ -121,8 +117,7 @@ class Function(with_metaclass(FunctionMeta)):
     def backward(ctx, grad_outputs):
 
         if len(ctx.np_args) == 3:
-            np_args = ctx.np_args
-            grads = loss_grad(*np_args)
+            grads = ctx.np_fn(*ctx.np_args)
 
             return grads
         else:
