@@ -28,6 +28,7 @@ class FunctionMeta(type):
     """
 
     def __init__(cls, name, bases, attrs):
+        FunctionMeta.grad_fn = None
         for super_cls in cls.mro():
             forward = super_cls.__dict__.get('forward')
             if forward is not None:
@@ -82,24 +83,34 @@ class Function(with_metaclass(FunctionMeta)):
             else:
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
 
-
     @classmethod
     def apply(cls, *args):
+
         if getattr(cls(), 'id') == 'Spikeloss':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
-
             np_fn, np_args, output = cls.forward(grad_fn, *args)
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
-
-        else:
+        elif getattr(cls(), 'id') == 'View':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
+        elif getattr(cls(), 'id') == 'add':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
+        else:
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output, v_current = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output,requires_grad=True, gamma=args[4], grad_fn=grad_fn)
+            return Variable(data=output, requires_grad=True, gamma=args[4], grad_fn=grad_fn), Variable(v_current)
 
     @staticmethod
     def forward(*args, **kwargs):
@@ -114,9 +125,8 @@ class Function(with_metaclass(FunctionMeta)):
             grads = loss_grad(*np_args)
 
             return grads
-
         else:
-            if len(ctx.np_args) ==2:
+            if len(ctx.np_args) == 2:
                 grads = grad_outputs
             else:
                 np_args = ctx.np_args

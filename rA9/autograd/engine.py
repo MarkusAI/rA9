@@ -24,6 +24,7 @@ def excute(fn, grad_in=None):
 
 def backward(variables):
     variables = (variables,) if isinstance(variables, Variable) else tuple(variables)
+
     for variable in variables:
         if variable.grad_fn is not None:
             excute(variable.grad_fn)

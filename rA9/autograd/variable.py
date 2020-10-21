@@ -36,15 +36,18 @@ class Variable(object):
         rA9.autograd.backward(self)
 
     def _add(self, other):
+
         if isinstance(other, Variable):
             return Add.apply(self, other)
         else:
             raise NotImplementedError("")
 
     def add(self, other):
+
         return self._add(other)
 
     def add_(self, other):
+
         return self._add(other)
 
     def view(self, *sizes):

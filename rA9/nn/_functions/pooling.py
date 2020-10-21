@@ -11,7 +11,7 @@ import jax.numpy as jnp
 class Pooling(Function):
     id = "Pooling"
     @staticmethod
-    def forward(ctx, input, size, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride=2):
+    def forward(ctx, input, size, time_step, weights, v_current, gamma, tau_m, Vth, dt, stride=2):
         assert isinstance(input, Variable)
         assert isinstance(weights, Variable)
         assert isinstance(v_current, Variable)
@@ -29,11 +29,10 @@ class Pooling(Function):
         np_args = (input.data, weights.data, size, v_current.data, gamma.data, tau_m, Vth, dt, stride)
         spike, v_current_n, gamma_np = np_fn(*np_args)
         gamma.data = gamma_np
-        v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
         np_grad_args = (weights.data, spike_time, time_step, Vth, gamma.data, tau_m)
-        return np_fn, np_grad_args, spike
+        return np_fn, np_grad_args, spike,v_current_n
 
     @staticmethod
     def backward(ctx, grad_outputs):

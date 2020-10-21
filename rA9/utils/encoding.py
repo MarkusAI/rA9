@@ -2,6 +2,7 @@ import jax.numpy as jnp
 import jax.random as random
 from jax.ops import index, index_update, index_add
 
+
 class PoissonEncoder(object):
     def __init__(self, duration, dt=1, key=0):
         super().__init__()
@@ -15,33 +16,35 @@ class PoissonEncoder(object):
 
         # Get shape and size of data.
         shape, size = jnp.shape(intensities), jnp.size(intensities)
+
         intensities = intensities.reshape(-1)
+
         time = self.duration // self.dt
 
         # Compute firing rates in seconds as function of data intensity,
         # accounting for simulation time step.
         rate_p = jnp.zeros(size)
         non_zero = intensities != 0
+
         rate = index_update(rate_p, index[non_zero], 1 / intensities[non_zero] * (1000 / self.dt))
         del rate_p
 
         # Create Poisson distribution and sample inter-spike intervals
         # (incrementing by 1 to avoid zero intervals).
-        intervals_p = random.poisson(key=self.key_x, lam=rate, shape=(time + 1, len(rate))).astype(jnp.float32)
+        intervals_p = random.poisson(key=self.key_x, lam=rate, shape=(time, len(rate))).astype(jnp.float32)
+
         intervals = index_add(intervals_p, index[:, intensities != 0],
                               (intervals_p[:, intensities != 0] == 0).astype(jnp.float32))
+
         del intervals_p
 
         # Calculate spike times by cumulatively summing over time dimension.
-        times_p = jnp.cumsum(intervals, dtype='float32')
-        times_p = times_p.reshape((-1, size))
-        times = index_update(times_p, times_p >= time + 1, 0).astype(jnp.int32)
+
+        times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
+
+        times = index_update(times_p, times_p <= time, 0).astype(jnp.int32)
+        times = index_update(times, times_p >= time, 1).astype(jnp.bool_)
+
         del times_p
 
-        # Create tensor of spikes.
-        spike = jnp.zeros((time + 1, size), dtype=bool)
-        spikes = index_update(spike, index[times, jnp.arange(size)], 1)
-        spikes = spikes[1:]
-
-        return spikes.reshape(time, *shape)
-
+        return times.reshape(time, *shape)

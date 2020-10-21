@@ -4,13 +4,14 @@ from .lif import jnp_fn
 from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax.ops import index, index_add
+from rA9.autograd.LIF_grad import *
 
 
 class Conv2d(Function):
     id = "Conv2d"
 
     @staticmethod
-    def forward(ctx, input, time_step, weights, spike_list, v_current, gamma, tau_m, Vth, dt, stride=1, padding=0):
+    def forward(ctx, input, time_step, weights, v_current, gamma, tau_m, Vth, dt, stride=1, padding=0):
         assert isinstance(input, Variable)
         assert isinstance(gamma, Variable)
         assert isinstance(weights, Variable)
@@ -27,13 +28,13 @@ class Conv2d(Function):
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
         spike, v_current_n, gamma_np = np_fn(*np_args)
+
         gamma.data = gamma_np
-        v_current.data = v_current_n
         spike_time = jnp.multiply(spike, dt * time_step)
         spike_time = jnp.concatenate((spike, spike_time), axis=1)
 
-        np_grad_args = (weights.data, spike_time,time_step, Vth, gamma.data, tau_m)
-        return np_fn, np_grad_args, spike
+        np_grad_args = (weights.data, spike_time, time_step, Vth, gamma.data, tau_m)
+        return np_fn, np_grad_args, spike, v_current_n
 
     @staticmethod
     def backward(ctx, grad_outputs):
