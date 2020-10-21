@@ -8,13 +8,13 @@ from collections import OrderedDict
 
 class Pooling(Module):
 
-    def __init__(self, channel, size=2, stride=2, tau_m=0.1, Vth=1, dt=1):
+    def __init__(self, channel, size=2, stride=2, tau_m=0.1, Vth=1, dt=1,staticweight=0.25):
         super(Pooling, self).__init__()
         self.size = size
         self.stride = stride
         self.kernel = (size, size)
 
-        self.weight = Variable(jnp.full((channel, 1) + self.kernel,0.25))
+        self.weight = Variable(jnp.full((channel, 1) + self.kernel,staticweight))
         Pooling.v_current = None
         Pooling.gamma = None
         Pooling.spike = None

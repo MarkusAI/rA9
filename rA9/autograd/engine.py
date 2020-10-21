@@ -9,12 +9,15 @@ def excute(fn, grad_in=None):
         if isinstance(fn, AccumulateGrad):
             if fn.variable.requires_grad and grad_in is not None:
                 if fn.variable.grad is None:
+
                     fn.variable.grad = jnp.zeros(fn.variable.data.shape)
 
                 fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
+
             return
 
         grad_outs = fn.apply(grad_in)
+
         if type(grad_outs) is not tuple:
             grad_outs = (grad_outs,)
 
