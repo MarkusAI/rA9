@@ -21,14 +21,14 @@ class SNN(Module):
         self.fc2 = nn.Linear(out_features=10, in_features=50)
         self.output = nn.Output(out_features=10)
 
-    def forward(self, x, time=1,spike=None):
-        x, time, spike = self.conv1(x, time,spike)
-        x, time, spike = self.pool1(x, time,spike)
-        x, time, spike = self.conv2(x, time,spike)
-        x, time, spike = self.pool2(x, time,spike)
-        x = Variable(x.data.reshape(-1, 320))
-        x, time, spike = self.fc1(x, time,spike)
-        x, time, spike = self.fc2(x, time,spike)
+    def forward(self, x, time, spike=None ):
+        x, spike = self.conv1(x, time, spike)
+        x, spike = self.pool1(x, time, spike)
+        x, spike = self.conv2(x, time, spike)
+        x, spike = self.pool2(x, time, spike)
+        x = x.view(-1,320)
+        x, spike = self.fc1(x, time, spike)
+        x, spike = self.fc2(x, time, spike)
         return self.output(x, time), spike
 
 
@@ -46,16 +46,16 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 
 model.train()
 train_loss = []
-
+duration = 100
 for epoch in range(15):
-    pe = PoissonEncoder(duration=100)
+    pe = PoissonEncoder(duration=duration)
     model.train()
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q)
 
-            output, spikes = model.forward(data, t + 1)
+            output, spikes = model.forward(data, t)
 
             optimizer = Adam(model.parameters(), spikes, lr=0.1)
             optimizer.zero_grad()
