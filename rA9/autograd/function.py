@@ -99,6 +99,12 @@ class Function(with_metaclass(FunctionMeta)):
             np_fn, np_args, output = cls.forward(grad_fn, *args)
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
+        
+        elif getattr(cls(), 'id') == 'output':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output = cls.forward(grad_fn, *args)
+            return Variable(data=output, requires_grad=False)
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
