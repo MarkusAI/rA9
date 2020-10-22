@@ -25,7 +25,7 @@ class Linear(Function):
             spike_list, v_current_n = jit(jnp_fn)(x=inv_current, v_current=v_current_np.T,
                                                   tau_m=tau_m, Vth=Vth, dt=dt)
 
-            return spike_list, v_current_n, index_add(gamma_np.T, index[:], spike_list)
+            return spike_list, v_current_n, index_add(gamma_np, index[:], spike_list)
 
         np_args = (input.data, weights.data, v_current.data, gamma.data, tau_m, Vth, dt)
 
