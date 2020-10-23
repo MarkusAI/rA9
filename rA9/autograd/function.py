@@ -78,32 +78,11 @@ class Function(with_metaclass(FunctionMeta)):
 
     @classmethod
     def apply(cls, *args):
-
-        if getattr(cls(), 'id') == 'Spikeloss':
-            backward_cls = cls()._backward_cls
-            grad_fn = backward_cls()
-            np_fn, np_args, output = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-
-            return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
-        elif getattr(cls(), 'id') == 'View':
-            backward_cls = cls()._backward_cls
-            grad_fn = backward_cls()
-            np_fn, np_args, output = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
-        elif getattr(cls(), 'id') == 'add':
-            backward_cls = cls()._backward_cls
-            grad_fn = backward_cls()
-            np_fn, np_args, output = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
-
-        elif getattr(cls(), 'id') == 'output':
+        if getattr(cls(), 'id') == 'output':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, v_current = cls.forward(grad_fn, *args)
-            return Variable(data=output, requires_grad=False), Variable(data=v_current)
+            return Variable(data=output, requires_grad=True,grad_fn =grad_fn), Variable(data=v_current)
         elif getattr(cls(), 'id') == 'LIF':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
@@ -132,5 +111,8 @@ class Function(with_metaclass(FunctionMeta)):
 
         np_fn = ctx.np_fn
         np_args = ctx.np_args
-        grads = jit(np_fn)(*np_args)
+        indexes = [index for index, need_grad in enumerate(ctx.needs_input_grad) if need_grad]
+
+        np_grad_fn = elementwise_grad(np_fn, indexes, initial_grad=grad_outputs)
+        grads = np_grad_fn(*np_args)
         return grads
