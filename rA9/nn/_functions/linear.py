@@ -17,8 +17,8 @@ class Linear(Function):
             return out
 
         np_args = (input.data, weight.data.T)
-
         return np_fn, np_args, np_fn(*np_args)
+
 
     @staticmethod
     def backward(ctx, grad_outputs):
