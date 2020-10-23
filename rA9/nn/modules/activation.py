@@ -1,29 +1,40 @@
-from jax import numpy as np
-from .module import Module
-from .. import functional as F
+from jax import jit
+import jax.numpy as np
+from rA9.autograd import Function
+from rA9.autograd import Variable
 
-class LIF(Module):
+class LIF(Function):
 
-    def __init__(self,tau_m=0.1,Vth=1,dt=1):
-        super(LIF, self).__init__()
-        self.s_time_list = None
-        self.v_current = 0
-        self.gamma = 0
-        self.tau_m = tau_m
-        self.Vth = Vth
-        self.dt = dt
+    @staticmethod
+    def forward(ctx, input, v_current, tau_m, Vth, dt, s_time_list, time, gamma):
+        assert isinstance(input, Variable)
 
-    def forward(self, input, time):
-        if self.s_time_list is None:
-            self.s_time_list = np.zeros(input.data.shape)
+        def np_fn(input_np, v_current, tau_m, Vth, dt):
+            spike = np.greater_equal(
+                v_current + np.multiply(
+                    np.divide(
+                        np.subtract(
+                            input_np,
+                            v_current
+                        ),
+                        tau_m
+                    ),
+                    dt
+                ),Vth).astype('int32')
+            v_current = np.where( spike == Vth, 0, v_current*np.exp(-1/tau_m))
+            return spike, v_current
+        def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
+            return np.multiply(grad_outputs,
+                (1/Vth*(1+np.multiply(1/gamma,np.sum(np.multiply(-1/tau_m, np.exp(time-s_time_list)))))))
 
-        output = F.LIF(input=input,v_current=self.v_current,
-                     tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
-                     s_time_list=self.s_time_list,time=time,
-                     gamma=self.gamma)
-        #spike time list to output
-        print(len(output.data))
-        self.v_current = self.v_current + v_current #Because of the problem which JAX has.
-        self.gamma = self.gamma + spike #Because of the problem which JAX has.
-        self.s_time_list = s_time_list
-        return grad_fn, time+1
+        np_args = (input.data, v_current, tau_m, Vth, dt)
+        spike, v_current = jit(np_fn)(*np_args); spike_time = spike*time
+        s_time_list = np.concatenate((spike_time, s_time_list))
+        grad_np_args = (s_time_list, time, tau_m, gamma, Vth)
+        return grad_fn, grad_np_args, spike, s_time_list, v_current
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        return super(LIF, LIF).backward(ctx, grad_output)
+
+

@@ -1,31 +1,21 @@
-import math
-
-import rA9
+from rA9.autograd import Function
 from rA9.autograd import Variable
-
-from .module import Module
-from rA9.nn.parameter import Parameter
-from .. import functional as F
-
 import jax.numpy as np
+from jax import jit
+from jax import grad
 
-class Linear(Module):
-    def __init__(self, in_features, out_features):
-        super(Linear, self).__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        self.weight = Parameter(np.zeros((out_features, in_features)))
-        self.reset_parameters()
+class Linear(Function):
 
-    def reset_parameters(self):
-        size = self.weight.data.shape
-        stdv = 1. / math.sqrt(size[1])
-        self.weight.uniform(-stdv, stdv)
+    @staticmethod
+    def forward(ctx, input, weight):
+        assert isinstance(input, Variable)
+        assert isinstance(weight, Variable)
 
-    def forward(self, input, time):
-        return F.linear(input, self.weight), time
+        def np_fn(input_np, weights_np):
+            return np.matmul(input_np, weights_np.T)
+        np_args = (input.data, weight.data)
+        return grad(np_fn), np_args, jit(np_fn)(*np_args), 0, 0
 
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-            + str(self.in_features) + ' -> ' \
-            + str(self.out_features) + ')'
+    @staticmethod
+    def backward(ctx, grad_output):
+        return super(Linear, Linear).backward(ctx, grad_output)
