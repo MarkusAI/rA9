@@ -15,6 +15,13 @@ class Conv2d(Function):
         self.stride = stride
         self.padding = padding
         self.reset_parameters()
+    
+    def reset_parameters(self):
+        n = self.in_channels
+        for k in self.kernel_size:
+            n *= k
+        stdv = 1. / np.sqrt(n)
+        self.weight.uniform(-stdv, stdv)
 
     def forward(self, input):
         out = F.conv2d(input=input, weights=self.weight, stride=self.stride, padding=self.padding)
