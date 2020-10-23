@@ -87,7 +87,7 @@ class Function(with_metaclass(FunctionMeta)):
 
         backward_cls = ctx()._backward_cls
         grad_fn = backward_cls()
-        np_fn, np_args, output, _ , _ = ctx.forward(grad_fn, *args)
+        np_fn, np_args, output = ctx.forward(grad_fn, *args)
 
         ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
 
