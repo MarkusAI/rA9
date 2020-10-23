@@ -1,11 +1,11 @@
-from rA9.autograd import Function
+from .module import Module
 from rA9.autograd import Variable
 from rA9.nn.parameter import Parameter
 from jax import numpy as np
 from jax import grad
 
 
-class Conv2d(Function):
+class Conv2d(Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
         super(Conv2d, self).__init__()
         self.in_channels = in_channels
