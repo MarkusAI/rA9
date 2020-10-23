@@ -1,6 +1,7 @@
 from .module import Module
 from rA9.autograd import Variable
 from rA9.nn.parameter import Parameter
+from .. import functional as F
 from jax import numpy as np
 from jax import grad
 
