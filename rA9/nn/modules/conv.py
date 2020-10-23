@@ -11,7 +11,7 @@ class Conv2d(Function):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = (kernel_size, kernel_size)
-        self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size))
+        self.weight = Parameter(np.zeros((out_channels, in_channels) + self.kernel_size))
         self.stride = stride
         self.padding = padding
         self.reset_parameters()
