@@ -82,6 +82,7 @@ class Function(with_metaclass(FunctionMeta)):
 
 
     @classmethod
+
     def apply(ctx, *args):
 
         backward_cls = ctx()._backward_cls
@@ -107,5 +108,3 @@ class Function(with_metaclass(FunctionMeta)):
         np_args = ctx.np_args
         grads = jit(np_fn)(*np_args)
         return grads
-
-

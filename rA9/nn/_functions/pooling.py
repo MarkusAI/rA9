@@ -1,8 +1,5 @@
 from jax import jit
 from .img2col import *
-from .lif import jnp_fn
-from jax.ops import index_add, index
-from jax.lax import index_take
 from rA9.autograd import Function
 from rA9.autograd import Variable
 import jax.numpy as jnp
@@ -10,29 +7,18 @@ import jax.numpy as jnp
 
 class Pooling(Function):
     id = "Pooling"
+
     @staticmethod
-    def forward(ctx, input, size, time_step, weights, v_current, gamma, tau_m, Vth, dt, stride=2):
+    def forward(ctx, input, size, weights, stride=2):
         assert isinstance(input, Variable)
         assert isinstance(weights, Variable)
-        assert isinstance(v_current, Variable)
-        assert isinstance(gamma, Variable)
 
-        def np_fn(input_np, weight, size, v_current_np, gamma_np, tau_m, Vth, dt, stride=2):
-            inv_current = pool_forward(input_np, weight, size=size, stride=stride)
+        def np_fn(input_np, weight, size, stride=2):
+            out = pool_forward(input_np, weight, size=size, stride=stride)
+            return out
 
-            spike_list, v_current_n = jit(jnp_fn)(x=inv_current, v_current=v_current_np,
-                                                  tau_m=tau_m, Vth=Vth, dt=dt)
-            index_add(gamma_np, index[:], spike_list)
-
-            return spike_list, v_current_n, index_add(gamma_np, index[:], spike_list)
-
-        np_args = (input.data, weights.data, size, v_current.data, gamma.data, tau_m, Vth, dt, stride)
-        spike, v_current_n, gamma_np = np_fn(*np_args)
-        gamma.data = gamma_np
-        spike_time = jnp.multiply(spike, dt * time_step)
-        spike_time = jnp.concatenate((spike, spike_time), axis=1)
-        np_grad_args = (weights.data, spike_time, time_step, Vth, gamma.data, tau_m)
-        return np_fn, np_grad_args, spike,v_current_n
+        np_args = (input.data, weights.data, size, stride)
+        return np_fn, np_args, np_fn(*np_args)
 
     @staticmethod
     def backward(ctx, grad_outputs):
@@ -59,5 +45,5 @@ def pool_forward(X, W, size=2, stride=2):
     out = out.reshape(h_out, w_out, n, d)
 
     out = jnp.transpose(out, (2, 3, 0, 1))
-    out = jnp.array(out,dtype='float32')
+    out = jnp.array(out, dtype='float32')
     return out
