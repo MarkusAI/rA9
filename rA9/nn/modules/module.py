@@ -8,7 +8,31 @@ class Module(object):
     def __init__(self):
         self._parameters = OrderedDict()
         self._modules = OrderedDict()
+        self._spikes = self.Spike()
         self.training = True
+
+    class Spike(object):
+        def __init__(self):
+            self.data = OrderedDict()
+
+        def update(self, key, layer):
+            self.data.update({key: layer})
+
+        def reset(self):
+            self.data = None
+            self.data = OrderedDict()
+
+        def recall_data(self):
+            return self.data
+
+    def spikes(self):
+        out = self._spikes.recall_data()
+        self._spikes.reset()
+        return out
+
+    def update_spike(self, key, layer):
+
+        self._spikes.update(key,layer)
 
     def forward(self, *input):
 

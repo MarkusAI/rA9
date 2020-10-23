@@ -45,7 +45,6 @@ class AccumulateGrad:
         self.variable = variable
 
     def apply(self):
-
         pass
 
 
@@ -99,14 +98,29 @@ class Function(with_metaclass(FunctionMeta)):
             np_fn, np_args, output = cls.forward(grad_fn, *args)
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn)
-        else:
+
+        elif getattr(cls(), 'id') == 'output':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output, v_current = cls.forward(grad_fn, *args)
+            return Variable(data=output, requires_grad=False), Variable(data=v_current)
+        elif getattr(cls(), 'id') == 'LIF':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
 
             np_fn, np_args, output, v_current = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
-            return Variable(data=output, requires_grad=True, gamma=args[4], grad_fn=grad_fn), Variable(v_current)
+            return Variable(data=output, requires_grad=True, gamma=args[4], grad_fn=grad_fn), \
+                   Variable(data=v_current), Variable(np_args[0])
+        else:
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            out_val = Variable(output, requires_grad=True, grad_fn=grad_fn)
+
+            return out_val
 
     @staticmethod
     def forward(*args, **kwargs):
@@ -116,14 +130,7 @@ class Function(with_metaclass(FunctionMeta)):
     @staticmethod
     def backward(ctx, grad_outputs):
 
-        if len(ctx.np_args) == 3:
-            grads = ctx.np_fn(*ctx.np_args)
-
-            return grads
-        else:
-            if len(ctx.np_args) == 2:
-                grads = grad_outputs
-            else:
-                np_args = ctx.np_args
-                grads = lif_grad(grad_outputs, *np_args)
-            return grads
+        np_fn = ctx.np_fn
+        np_args = ctx.np_args
+        grads = jit(np_fn)(*np_args)
+        return grads
