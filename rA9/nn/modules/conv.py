@@ -1,5 +1,6 @@
 from rA9.autograd import Function
 from rA9.autograd import Variable
+from rA9.nn.parameter import Parameter
 from jax import numpy as np
 from jax import grad
 
