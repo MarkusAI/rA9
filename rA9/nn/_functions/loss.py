@@ -16,6 +16,7 @@ class Spikeloss(Function):
 
         np_args = (input.data, target.data, time_step)
         id = "Spikeloss"
+
         return np_fn, np_args, np_fn(*np_args), id
 
     @staticmethod

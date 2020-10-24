@@ -16,6 +16,7 @@ class BackwardFunction(object):
     _is_legacy = False
 
     def apply(self, *args):
+
         return self._forward_cls.backward(self, *args)
 
 
@@ -76,9 +77,7 @@ class Function(with_metaclass(FunctionMeta)):
             else:
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
 
-
     @classmethod
-
     def apply(cls, *args):
         if getattr(cls(), 'id') == 'output':
             backward_cls = cls()._backward_cls
@@ -105,7 +104,6 @@ class Function(with_metaclass(FunctionMeta)):
 
             return out_val
 
-
     @staticmethod
     def forward(*args, **kwargs):
 
@@ -113,20 +111,20 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-
         np_fn = ctx.np_fn
+        
         np_args = ctx.np_args
         id = ctx.id
         if id == "Spikeloss":
             grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
-            return grads
         elif id == "output":
-            grads = np_fn(grad_outputs,*np_args)
-            return grads
+
+            grads = np_fn(grad_outputs, *np_args)
         elif id == "LIF":
-            grads = np_fn(grad_outputs,*np_args)
-            return grads
+            grads = np_fn(grad_outputs, *np_args)
+
         else:
             grad = jit(grad(np_fn))
-            grads = grad(grad_outputs,*np_args)
-            return grads
+            grads = grad(grad_outputs, *np_args)
+
+        return grads
