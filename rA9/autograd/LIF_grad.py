@@ -4,7 +4,6 @@ import jax.numpy as jnp
 
 
 def lif_grad(grad_output, *args):
-
     def grad(grad_output, weights, spike_list, time_step, Vth, gamma, tau_m):
         return jnp.multiply(
             jnp.matmul(weights, grad_output),
@@ -21,10 +20,13 @@ def lif_grad(grad_output, *args):
     return jit(grad)(grad_output, *args)
 
 
-'''
 def loss_grad(input, target, timestep):
     def np_fn(input, target):
         return (1 / 2) * jnp.sum((jnp.argmax(input) - target.T) ** 2)
 
-    print((jnp.argmax(input) - target.T))
-    return (grad(np_fn)(input, target)) / timestep'''
+    return (grad(np_fn)(input, target)) / timestep
+
+
+def elementwise_grad(fun, x, initial_grad=None):
+    grad_fun = grad(fun, initial_grad, x)
+    return grad_fun

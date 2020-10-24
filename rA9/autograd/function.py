@@ -1,16 +1,16 @@
 from jax import jit
 from .variable import *
+from rA9.autograd.LIF_grad import *
+
 
 def with_metaclass(meta, *bases):
-    """Create a base class with a metaclass."""
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
     class metaclass(meta):
 
         def __new__(cls, name, this_bases, d):
             return meta(name, bases, d)
+
     return type.__new__(metaclass, 'temporary_class', (), {})
+
 
 class BackwardFunction(object):
     _is_legacy = False
@@ -18,15 +18,8 @@ class BackwardFunction(object):
     def apply(self, *args):
         return self._forward_cls.backward(self, *args)
 
-class FunctionMeta(type):
-    """Function metaclass.
 
-    This metaclass sets up the following properties:
-        _is_legacy: True if forward is not defined as a static method.
-        _backward_cls: The Function class corresponding to the differentiated
-            version of this function (which is generated on the fly by this
-            metaclass).
-    """
+class FunctionMeta(type):
 
     def __init__(cls, name, bases, attrs):
         for super_cls in cls.mro():
@@ -46,6 +39,7 @@ class FunctionMeta(type):
 
         return super(FunctionMeta, cls).__init__(name, bases, attrs)
 
+
 class AccumulateGrad():
     def __init__(self, variable):
         self.variable = variable
@@ -53,47 +47,63 @@ class AccumulateGrad():
     def apply(self):
         pass
 
+
 class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
-    def setup_grad_fn(grad_fn, np_fn, np_args, *args):
+    def setup_grad_fn(grad_fn, np_fn, np_args, id, *args):
         grad_fn.saved_variables = ()
         grad_fn.next_functions = ()
         grad_fn.needs_input_grad = ()
         grad_fn.np_fn = np_fn
         grad_fn.args = args
         grad_fn.np_args = np_args
+        grad_fn.id = id
 
         for arg in args:
+
             if isinstance(arg, Variable):
-                grad_fn.saved_variables = grad_fn.saved_variables + (arg, )
+                grad_fn.saved_variables = grad_fn.saved_variables + (arg,)
                 if arg.requires_grad:
-                    grad_fn.needs_input_grad = grad_fn.needs_input_grad + (True, )
+                    grad_fn.needs_input_grad = grad_fn.needs_input_grad + (True,)
                 else:
                     grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
-
                 if arg.grad_fn is not None:
                     grad_fn.next_functions = grad_fn.next_functions + (arg.grad_fn,)
                 else:
                     if arg.requires_grad:
-                        grad_fn.next_functions = grad_fn.next_functions + (AccumulateGrad(arg), )
+                        grad_fn.next_functions = grad_fn.next_functions + (AccumulateGrad(arg),)
             else:
-                grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False, )
+                grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
 
 
     @classmethod
 
-    def apply(ctx, *args):
+    def apply(cls, *args):
+        if getattr(cls(), 'id') == 'output':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
+                   Variable(data=v_current)
+        elif getattr(cls(), 'id') == 'LIF':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
 
-        backward_cls = ctx()._backward_cls
-        grad_fn = backward_cls()
-        np_fn, np_args, output = ctx.forward(grad_fn, *args)
+            np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
 
-        ctx.setup_grad_fn(grad_fn, np_fn, np_args, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
+                   Variable(data=v_current), Variable(np_args[0])
+        else:
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            np_fn, np_args, output, id = cls.forward(grad_fn, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            out_val = Variable(output, requires_grad=True, grad_fn=grad_fn, id=id)
 
-        out_val = Variable(output, requires_grad=True, grad_fn=grad_fn)
-
-        return out_val
+            return out_val
 
 
     @staticmethod
@@ -106,5 +116,17 @@ class Function(with_metaclass(FunctionMeta)):
 
         np_fn = ctx.np_fn
         np_args = ctx.np_args
-        grads = jit(np_fn)(*np_args)
-        return grads
+        id = ctx.id
+        if id == "Spikeloss":
+            grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
+            return grads
+        elif id == "output":
+            grads = np_fn(grad_outputs,*np_args)
+            return grads
+        elif id == "LIF":
+            grads = np_fn(grad_outputs,*np_args)
+            return grads
+        else:
+            grad = jit(grad(np_fn))
+            grads = grad(grad_outputs,*np_args)
+            return grads

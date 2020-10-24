@@ -4,14 +4,16 @@ from ..function import Function
 
 
 class Add(Function):
-    id= "add"
+    id = "Add"
+
     @staticmethod
     def forward(ctx, a, b):
         def np_fn(a, b):
             return a + b
 
+        id = "Add"
         np_args = (a.data, b.data)
-        return np_fn, np_args, np_fn(*np_args)
+        return np_fn, np_args, np_fn(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -23,14 +25,16 @@ def sort_args(a, b):
 
 
 class View(Function):
-    id="View"
+    id = "View"
+
     @staticmethod
     def forward(ctx, a, sizes):
         def np_fn(a, sizes):
             return np.reshape(a, sizes)
 
+        id = "View"
         np_args = (a.data, sizes)
-        return np_fn, np_args, np_fn(*np_args)
+        return np_fn, np_args, np_fn(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):

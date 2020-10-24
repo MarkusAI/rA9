@@ -8,7 +8,6 @@ import jax.numpy as jnp
 class LIF(Module):
     def __init__(self, key, tau_m=0.1, Vth=1, dt=1):
         super(LIF, self).__init__()
-
         self.time_step = 1
         self.tau_m = tau_m
         self.Vth = Vth
@@ -56,7 +55,6 @@ class LIF(Module):
         return self.__class__.__name__ + ' (' \
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
-
 
 
 
