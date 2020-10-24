@@ -18,7 +18,8 @@ class Dropout(Function):
         if p == 1:
             noise.fill(0)
         np_args = (input.data, noise)
-        return np_fn, np_args, np_fn(*np_args)
+        id = "Dropout"
+        return np_fn, np_args, np_fn(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):

@@ -18,7 +18,8 @@ class Pooling(Function):
             return out
 
         np_args = (input.data, weights.data, size, stride)
-        return np_fn, np_args, np_fn(*np_args)
+        id = "Pooling"
+        return np_fn, np_args, np_fn(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):

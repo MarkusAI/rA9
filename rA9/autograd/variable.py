@@ -5,11 +5,11 @@ import jax.random as random
 
 class Variable(object):
 
-    def __init__(self, data, gamma=None, requires_grad=False, grad_fn=None):
+    def __init__(self, data, id=None, requires_grad=False, grad_fn=None):
         self.data = data
         self.grad = None
         self.grad_fn = grad_fn
-        self.gamma = gamma
+        self.id = id
 
         self.requires_grad = requires_grad
 

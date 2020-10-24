@@ -18,7 +18,8 @@ class Conv2d(Function):
             return out
 
         np_args = (input.data, weights.data, stride, padding)
-        return np_fn, np_args, np_fn(*np_args)
+        id = "Conv2d"
+        return np_fn, np_args, np_fn(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):

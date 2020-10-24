@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 from rA9.autograd import Function
 from rA9.autograd import Variable
-
+from jax import  jit
 
 class Output(Function):
     id = "output"
@@ -14,24 +14,19 @@ class Output(Function):
 
         def np_fn(input_np, weights_np, v_current, time_step, dt, tau_m):
             return jnp.divide(
-                jnp.divide(
-                    (
-                        jnp.multiply
-                            (
-                            jnp.subtract
-                                (
-                                jnp.matmul(input_np, weights_np), v_current
-                            ),
-                            dt
-                        )
-                    )
-                    , tau_m
-                )
-                , time_step)
+                jnp.multiply(jnp.subtract(jnp.matmul(input_np, weights_np), v_current), dt * tau_m), time_step)
+
+        def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
+            return jnp.multiply(grad_outputs,
+                               (1 / Vth * (1 + jnp.multiply(1 / gamma, jnp.sum(
+                                   jnp.multiply(-1 / tau_m, jnp.exp(time - s_time_list)))))))
 
         np_args = (input.data, weights.data, v_current.data, time_step, dt, tau_m)
-        np_grad_args = (input.data, dt)
-        return np_fn, np_grad_args, np_fn(*np_args), v_current.data
+        spike = jit(np_fn)(*np_args)
+        grad_np_args = (spike, time_step, tau_m, gamma.data, Vth)
+
+        id = "output"
+        return grad_fn, grad_np_args, spike, v_current.data, id
 
     @staticmethod
     def backward(ctx, grad_outputs):

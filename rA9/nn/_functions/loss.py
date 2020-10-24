@@ -15,7 +15,8 @@ class Spikeloss(Function):
             return jnp.sum((input_np - jnp.tile(jnp.expand_dims(target_np, axis=1), target_np.shape[1:])) ** 2) / 2
 
         np_args = (input.data, target.data, time_step)
-        return np_fn, np_args, np_fn(*np_args)
+        id = "Spikeloss"
+        return np_fn, np_args, np_fn(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):
