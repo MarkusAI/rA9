@@ -1,11 +1,9 @@
-from .module import Module
+from rA9.autograd import Function
 from rA9.autograd import Variable
 from jax import numpy as jnp
-from rA9.nn.parameter import Parameter
+from .module import Module
+from ..parameter import Parameter
 from .. import functional as F
-
-
-
 
 class Conv2d(Module):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
@@ -13,17 +11,10 @@ class Conv2d(Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = (kernel_size, kernel_size)
-        self.weight = Parameter(np.zeros((out_channels, in_channels) + self.kernel_size))
+        self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size))
         self.stride = stride
         self.padding = padding
         self.reset_parameters()
-    
-    def reset_parameters(self):
-        n = self.in_channels
-        for k in self.kernel_size:
-            n *= k
-        stdv = 1. / np.sqrt(n)
-        self.weight.uniform(-stdv, stdv)
 
     def reset_parameters(self):
         n = self.in_channels
