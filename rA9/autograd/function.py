@@ -78,6 +78,7 @@ class Function(with_metaclass(FunctionMeta)):
 
 
     @classmethod
+
     def apply(cls, *args):
         if getattr(cls(), 'id') == 'output':
             backward_cls = cls()._backward_cls
@@ -103,6 +104,7 @@ class Function(with_metaclass(FunctionMeta)):
             out_val = Variable(output, requires_grad=True, grad_fn=grad_fn, id=id)
 
             return out_val
+
 
     @staticmethod
     def forward(*args, **kwargs):
