@@ -35,4 +35,5 @@ class Output(Function):
 
     @staticmethod
     def backward(ctx, grad_outputs):
+
         super(Output, Output).backward(ctx, grad_outputs)
