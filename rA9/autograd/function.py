@@ -1,5 +1,5 @@
-from jax import jit, grad
-from .variable import *
+from jax import jit, grad, vjp
+from rA9.autograd.variable import *
 from rA9.autograd.LIF_grad import *
 
 
@@ -31,11 +31,24 @@ class BackwardFunction(object):
 
             grads = np_fn(grad_outputs, *np_args)
         elif id == "LIF":
-            grads = np_fn(grad_outputs, *np_args)
 
+            grads = np_fn(grad_outputs, *np_args)
+            grads = jnp.where(grads == jnp.inf, 0, grads)
+            grads = jnp.nan_to_num(grads)
+        elif id == "Linear":
+            weight = jnp.transpose(jnp.array(np_args[1]))
+            grads = jnp.matmul(grad_outputs, weight)
         else:
-            grade = jit(grad(np_fn))
-            grads = grade(grad_outputs, *np_args)
+            if (len(np_args[0].shape)) == 4:
+                if len(np_args) >= 3:
+                    grads = np_fn(grad_outputs, *np_args)
+                else:
+                    shape = (grad_outputs.shape[0], np_args[0].shape[1], np_args[0].shape[2], np_args[0].shape[3])
+                    grad_outputs = grad_outputs.reshape(shape)
+                    grads = grad_outputs
+
+            else:
+                grads = grad_outputs
 
         return grads
 
@@ -129,11 +142,10 @@ class Function(with_metaclass(FunctionMeta)):
 
         raise NotImplementedError
 
-
     @staticmethod
     def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
-        
+
         np_args = ctx.np_args
         id = ctx.id
         if id == "Spikeloss":
@@ -147,5 +159,5 @@ class Function(with_metaclass(FunctionMeta)):
         else:
             grad = jit(grad(np_fn))
             grads = grad(grad_outputs, *np_args)
-        
+
         return grads
