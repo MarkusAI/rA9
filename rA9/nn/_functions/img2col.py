@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-
+from jax.ops import index, index_add
 
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
