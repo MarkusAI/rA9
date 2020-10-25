@@ -53,9 +53,8 @@ def pool_forward(X, W, size=2, stride=2):
 
 def pool_backward(X, W, size=2, stride=2):
     n, d, h, w = X.shape
-    h_out = (h - size) / stride + 1
-    w_out = (w - size) / stride + 1
-    h_out, w_out = int(h_out), int(w_out)
+    h_out = (h - size) // stride + 1
+    w_out = (w - size) // stride + 1
 
     X_col = col2im_indices(X, X.shape, size, size, padding=0, stride=stride)
 
