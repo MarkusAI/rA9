@@ -46,7 +46,8 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     k, i, j = get_im2col_indices(x_shape, field_height, field_width, padding, stride)
     cols_reshaped = cols.reshape(C * field_height * field_width, -1, N)
     cols_reshaped =jnp.transpose(cols_reshaped, (2, 0, 1))
-    jnp.add.at(x_padded, (slice(None), k, i, j), cols_reshaped) # Need to solve
+    for z in (slice(None), k, i, j):
+        x_padded[z] = x_padded[z] + cols_reshaped
     if padding == 0:
         return x_padded
     return jnp.array(x_padded[:, :, padding:-padding, padding:-padding])
