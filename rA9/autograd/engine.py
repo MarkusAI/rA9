@@ -23,7 +23,7 @@ def excute(fn, grad_in=None):
             grad_outs = (grad_outs,)
 
         for i, next_func in enumerate(fn.next_functions):
-            
+
             excute(next_func, grad_outs[i])
 
 

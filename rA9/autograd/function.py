@@ -1,4 +1,4 @@
-from jax import jit
+from jax import jit, grad
 from .variable import *
 from rA9.autograd.LIF_grad import *
 
@@ -34,8 +34,8 @@ class BackwardFunction(object):
             grads = np_fn(grad_outputs, *np_args)
 
         else:
-            grad = jit(grad(np_fn))
-            grads = grad(grad_outputs, *np_args)
+            grade = jit(grad(np_fn))
+            grads = grade(grad_outputs, *np_args)
 
         return grads
 
@@ -130,7 +130,7 @@ class Function(with_metaclass(FunctionMeta)):
         raise NotImplementedError
 
     @staticmethod
-    def backward(ctx, grad_outputs):
+ '''   def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
         
         np_args = ctx.np_args
@@ -147,4 +147,4 @@ class Function(with_metaclass(FunctionMeta)):
             grad = jit(grad(np_fn))
             grads = grad(grad_outputs, *np_args)
         
-        return grads
+        return grads'''
