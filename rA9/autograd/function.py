@@ -129,8 +129,9 @@ class Function(with_metaclass(FunctionMeta)):
 
         raise NotImplementedError
 
+
     @staticmethod
- '''   def backward(ctx, grad_outputs):
+    def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
         
         np_args = ctx.np_args
@@ -147,4 +148,4 @@ class Function(with_metaclass(FunctionMeta)):
             grad = jit(grad(np_fn))
             grads = grad(grad_outputs, *np_args)
         
-        return grads'''
+        return grads
