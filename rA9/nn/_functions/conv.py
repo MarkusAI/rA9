@@ -18,8 +18,9 @@ class Conv2d(Function):
             return out
 
         np_args = (input.data, weights.data, stride, padding)
+        grad_args = (weights.data,stride,padding)
         id = "Conv2d"
-        return np_fn, np_args, np_fn(*np_args), id
+        return conv_backward, grad_args, np_fn(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):
@@ -36,6 +37,25 @@ def conv_forward(X, W, stride=1, padding=0):
     h_out, w_out = int(h_out), int(w_out)
 
     X_col = im2col_indices(X, h_filter, w_filter, padding=padding, stride=stride)
+    W_col = W.reshape(n_filters, -1)
+
+    out = jnp.matmul(W_col, X_col)
+
+    out = out.reshape(n_filters, h_out, w_out, n_x)
+    out = jnp.transpose(out, (3, 0, 1, 2))
+    return out
+
+
+def conv_backward(X, W, stride=1, padding=0):
+    n_filters, d_filter, h_filter, w_filter = W.shape
+
+    n_x, d_x, h_x, w_x = X.shape
+    h_out = (h_x - h_filter + 2 * padding) / stride + 1
+    w_out = (w_x - w_filter + 2 * padding) / stride + 1
+
+    h_out, w_out = int(h_out), int(w_out)
+
+    X_col = col2im_indices(X, X.shape, h_filter, w_filter, padding=padding, stride=stride)
     W_col = W.reshape(n_filters, -1)
 
     out = jnp.matmul(W_col, X_col)

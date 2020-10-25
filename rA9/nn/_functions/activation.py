@@ -23,9 +23,12 @@ class LIF(Function):
                     ),
                     dt), Vth).astype('int32')
             v_current = np.where(spike == Vth, 0, v_current * np.exp(-1 / tau_m))
+
             return spike, v_current
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
+
+
             return np.multiply(grad_outputs,
                                (1 / Vth * (1 + np.multiply(1 / gamma, np.sum(
                                    np.multiply(-1 / tau_m, np.exp(time - s_time_list)))))))
