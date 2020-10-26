@@ -52,7 +52,7 @@ def pool_forward(X, W, size=2, stride=2):
 
 def pool_backward(X, W, size=2, stride=2):
     n, d, h, w = X.shape
-
+    n_filter, v, h_filter, w_filter = W.shape
     dx = jnp.transpose(X, (2, 3, 0, 1))
     dx = jnp.ravel(dx)
     W_col = W.reshape(n_filter, -1)
