@@ -46,7 +46,7 @@ def conv_forward(X, W, stride=1, padding=0):
 
 def conv_backward(X, W, stride=1, padding=0):
     n, d, h, w = X.shape
-
+    n_filter, v, h_filter, w_filter = W.shape
     dx = jnp.transpose(X, (3, 0, 1, 2))
     dx = jnp.ravel(dx)
     W_col = W.reshape(n_filter, -1)
