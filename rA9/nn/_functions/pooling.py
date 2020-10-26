@@ -14,13 +14,14 @@ class Pooling(Function):
         assert isinstance(weights, Variable)
 
         def np_fn(input_np, weight, size, stride=2):
-            out = pool_forward(input_np, weight, size=size, stride=stride)
-            return out
+            out, X_col = pool_forward(input_np, weight, size=size, stride=stride)
+            return out, X_col
 
         np_args = (input.data, weights.data, size, stride)
-        grad_args = (weights.data, size, stride)
+        out, x_col = np_fn(*np_args)
+        grad_args = (weights.data, x_col, size, stride)
         id = "Pooling"
-        return pool_backward, grad_args, np_fn(*np_args), id
+        return pool_backward, grad_args, out, id
 
     @staticmethod
     def backward(ctx, grad_outputs):
@@ -29,8 +30,10 @@ class Pooling(Function):
 
 def pool_forward(X, W, size=2, stride=2):
     n, d, h, w = X.shape
+
     h_out = (h - size) // stride + 1
     w_out = (w - size) // stride + 1
+
 
     X_reshaped = X.reshape(n * d, 1, h, w)
 
@@ -40,26 +43,33 @@ def pool_forward(X, W, size=2, stride=2):
     n_filter, v, h_filter, w_filter = W.shape
     W_col = W.reshape(n_filter, -1)
 
-    X_col = jnp.matmul(W_col, X_col)
+    out = jnp.matmul(W_col, X_col)
 
-    out = jnp.array(jnp.take(X_col, max_idx_X))
+    out = jnp.array(jnp.take(out, max_idx_X))
+
     out = out.reshape(h_out, w_out, n, d)
 
     out = jnp.transpose(out, (2, 3, 0, 1))
     out = jnp.array(out, dtype='float32')
-    return out
+
+    return out, X_col
 
 
-def pool_backward(X, W, size=2, stride=2):
-    n, d, h, w = X.shape
+def pool_backward(X, W, X_col, size=2, stride=2):
+
     n_filter, v, h_filter, w_filter = W.shape
+
     dx = jnp.transpose(X, (2, 3, 0, 1))
-    dx = jnp.ravel(dx)
+    dx = jnp.ravel(dx) * (size * size)
+    dX = dx
+    for i in range((size * size) - 1):
+        dX = jnp.append(dX, dx, axis=0)
+
+    dx = dX.reshape(size * size, dx.shape[0])
     W_col = W.reshape(n_filter, -1)
-    dx = jnp.matmul(W_col, dx)
 
-    X_col = col2im_indices(dx, (n , d, h, w), size, size, stride=stride)
+    dout = jnp.matmul(W_col, dx)
+    dw = jnp.matmul(dout, X_col.T)
+    dw = dw.reshape(W.shape)
 
-    out = X_col.reshape(n,d,h,w)
-
-    return out
+    return dw
