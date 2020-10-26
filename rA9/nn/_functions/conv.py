@@ -13,14 +13,15 @@ class Conv2d(Function):
         assert isinstance(weights, Variable)
 
         def np_fn(input_np, weights_np, stride=1, padding=0):
-            out = conv_forward(input_np, weights_np, stride, padding)
+            out, X_col = conv_forward(input_np, weights_np, stride, padding)
 
-            return out
+            return out, X_col
 
         np_args = (input.data, weights.data, stride, padding)
-        grad_args = (weights.data,stride,padding)
+        out, X_col = np_fn(*np_args)
+        grad_args = (weights.data, X_col, stride, padding)
         id = "Conv2d"
-        return conv_backward, grad_args, np_fn(*np_args), id
+        return conv_backward, grad_args, out, id
 
     @staticmethod
     def backward(ctx, grad_outputs):
@@ -31,31 +32,27 @@ def conv_forward(X, W, stride=1, padding=0):
     n_filters, d_filter, h_filter, w_filter = W.shape
 
     n_x, d_x, h_x, w_x = X.shape
-    h_out = (h_x - h_filter + 2 * padding) // stride + 1
-    w_out = (w_x - w_filter + 2 * padding) // stride + 1
+    h_out = (h_x - h_filter + 2 * padding) / stride + 1
+    w_out = (w_x - w_filter + 2 * padding) / stride + 1
+
+    h_out, w_out = int(h_out), int(w_out)
 
     X_col = im2col_indices(X, h_filter, w_filter, padding=padding, stride=stride)
+
     W_col = W.reshape(n_filters, -1)
 
     out = jnp.matmul(W_col, X_col)
 
     out = out.reshape(n_filters, h_out, w_out, n_x)
     out = jnp.transpose(out, (3, 0, 1, 2))
-    return out
+    return out, X_col
 
 
-def conv_backward(X, W, stride=1, padding=0):
-    n, d, h, w = X.shape
+def conv_backward(X, W, X_col, stride=1, padding=0):
     n_filter, v, h_filter, w_filter = W.shape
-    dx = jnp.transpose(X, (3, 0, 1, 2))
-    dx = jnp.ravel(dx)
-    W_col = W.reshape(n_filter, -1)
-    dx = jnp.matmul(W_col, dx)
 
-    X_col = col2im_indices(dx, (n, d, h, w), size, size, padding=padding, stride=stride)
+    dout_reshaped = jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1)
+    dW = dout_reshaped @ X_col.T
+    dW = dW.reshape(W.shape)
 
-
-    out = X_col.reshape(n, d, h, w)
-
-    return out
-
+    return dW
