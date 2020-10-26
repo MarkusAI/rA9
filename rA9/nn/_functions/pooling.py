@@ -33,7 +33,7 @@ def pool_forward(X, W, size=2, stride=2):
 
     h_out = (h - size) // stride + 1
     w_out = (w - size) // stride + 1
-    h_out, w_out = int(h_out), int(w_out)
+
 
     X_reshaped = X.reshape(n * d, 1, h, w)
 
@@ -56,7 +56,7 @@ def pool_forward(X, W, size=2, stride=2):
 
 
 def pool_backward(X, W, X_col, size=2, stride=2):
-    n, d, h, w = X.shape
+
     n_filter, v, h_filter, w_filter = W.shape
 
     dx = jnp.transpose(X, (2, 3, 0, 1))
