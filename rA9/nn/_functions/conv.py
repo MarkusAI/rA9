@@ -42,17 +42,27 @@ def conv_forward(X, W, stride=1, padding=0):
     W_col = W.reshape(n_filters, -1)
 
     out = jnp.matmul(W_col, X_col)
-
     out = out.reshape(n_filters, h_out, w_out, n_x)
     out = jnp.transpose(out, (3, 0, 1, 2))
+
     return out, X_col
 
 
 def conv_backward(X, W, X_col, stride=1, padding=0):
     n_filter, v, h_filter, w_filter = W.shape
+    n_x, d_x, h_x, w_x = X.shape
+    h_out = (h_x - 1) * stride + h_filter - 2 * padding
+    w_out = (w_x - 1) * stride + w_filter - 2 * padding
+
+    h_out, w_out = int(h_out), int(w_out)
 
     dout_reshaped = jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1)
-    dW = jnp.matmul(dout_reshaped, X_col.T)
-    dW = dW.reshape(W.shape)
 
-    return dW
+    W_col = W.reshape(n_filter, -1)
+    dx_col = jnp.matmul(W_col.T, dout_reshaped)
+
+    newshape = (n_x, v, h_out, w_out)
+
+    dx = col2im_indices(dx_col, newshape, h_filter, w_filter, padding=padding, stride=stride)
+
+    return dx
