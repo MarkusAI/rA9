@@ -59,7 +59,7 @@ for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
-            data = Variable(q)
+            data = Variable(q,requires_grad=True)
 
             output = model(data, t)
 

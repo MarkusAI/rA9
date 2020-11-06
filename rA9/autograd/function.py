@@ -21,6 +21,7 @@ class BackwardFunction(object):
 
     @staticmethod
     def backward(ctx, grad_outputs):
+
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
@@ -103,6 +104,7 @@ class Function(with_metaclass(FunctionMeta)):
                 else:
                     grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
                 if arg.grad_fn is not None:
+
                     grad_fn.next_functions = grad_fn.next_functions + (arg.grad_fn,)
                 else:
                     if arg.requires_grad:
