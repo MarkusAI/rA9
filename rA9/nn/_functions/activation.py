@@ -35,6 +35,7 @@ class LIF(Function):
 
         np_args = (input.data, v_current.data, tau_m, Vth, dt)
         spike, v_current = jit(np_fn)(*np_args)
+
         spike_time = spike * time
         s_time_list = np.concatenate((spike_time, s_time_list.data))
         grad_np_args = (s_time_list, time, tau_m, gamma.data, Vth)

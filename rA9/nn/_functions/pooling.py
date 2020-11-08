@@ -53,7 +53,7 @@ def pool_forward(X, W, size=2, stride=2):
     return out
 
 
-def pool_backward(X, W, size=2, stride=2):
+def pool_backward(X,v_currnet, W, size=2, stride=2):
     n, d, h, w = X.shape
     h_out = (h - 1) * stride + size
     w_out = (w - 1) * stride + size

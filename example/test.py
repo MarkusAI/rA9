@@ -51,7 +51,7 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
                          batch_size=batch_size)
 
 model.train()
-
+optimizer = Adam(model.parameters(), lr=0.01)
 duration = 100
 for epoch in range(15):
     pe = PoissonEncoder(duration=duration)
@@ -62,12 +62,11 @@ for epoch in range(15):
             data = Variable(q,requires_grad=True)
 
             output = model(data, t)
-
-            optimizer = Adam(model.parameters(), model.spikes(), lr=0.1)
-            optimizer.zero_grad()
+            
             loss = F.Spikeloss(output, target, time_step=t + 1)
             loss.backward()  # calc gradients
             optimizer.step()  # update gradients
-        if i % 1 == 0:
-            print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
+
+            if i % 1 == 0:
+                 print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
         i += 1

@@ -20,43 +20,51 @@ class BackwardFunction(object):
         return self.backward(self, *args)
 
     @staticmethod
-    def backward(ctx, grad_outputs):
-
+    def backward(ctx, grad_outputs, v_current):
+        v_currents = None
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
-        indexes = [index for index, need_grad in enumerate(ctx.needs_input_grad) if need_grad]
 
         id = ctx.id
         if id == "Spikeloss":
             grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
 
         elif id == "output":
+            v_currents = ctx.v_current
+
             grads = np_fn(grad_outputs, *np_args)
 
         elif id == "LIF":
+            v_currents = ctx.v_current
             grads = np_fn(grad_outputs, *np_args)
+
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads)
         elif id == "Linear":
             weight = jnp.transpose(jnp.array(np_args[1]))
             grad = jnp.matmul(grad_outputs, weight)
 
-            weights = jnp.transpose(jnp.matmul(np_args[0].T,grad_outputs))
+            weight_grad = jnp.multiply(grad_outputs, v_current)
+
+            weights = jnp.transpose(jnp.matmul(np_args[0].T,weight_grad))
+            v_currents = v_current
             grads = (grad, weights)
         else:
             if (len(np_args[0].shape)) == 4:
                 if len(np_args) >= 3:
-                    grads = np_fn(grad_outputs, *np_args)
+                    grads = np_fn(grad_outputs,v_current, *np_args)
                 else:
                     shape = (grad_outputs.shape[0], np_args[0].shape[1], np_args[0].shape[2], np_args[0].shape[3])
                     grad_outputs = grad_outputs.reshape(shape)
                     grads = grad_outputs
+                v_currents = v_current
 
             else:
                 grads = grad_outputs
+                v_currents = v_current
 
-        return grads
+        return grads, v_currents
 
 
 class FunctionMeta(type):
@@ -91,13 +99,14 @@ class AccumulateGrad():
 class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
-    def setup_grad_fn(grad_fn, np_fn, np_args, id, *args):
+    def setup_grad_fn(grad_fn, np_fn, v_current, np_args, id, *args):
         grad_fn.saved_variables = ()
         grad_fn.next_functions = ()
         grad_fn.needs_input_grad = ()
         grad_fn.np_fn = np_fn
         grad_fn.args = args
         grad_fn.np_args = np_args
+        grad_fn.v_current = v_current
         grad_fn.id = id
 
         for arg in args:
@@ -113,7 +122,6 @@ class Function(with_metaclass(FunctionMeta)):
                     grad_fn.next_functions = grad_fn.next_functions + (arg.grad_fn,)
                 else:
                     if arg.requires_grad:
-
                         grad_fn.next_functions = grad_fn.next_functions + (AccumulateGrad(arg),)
             else:
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
@@ -124,7 +132,7 @@ class Function(with_metaclass(FunctionMeta)):
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, v_current, np_args, id, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current)
         elif getattr(cls(), 'id') == 'LIF':
@@ -133,14 +141,14 @@ class Function(with_metaclass(FunctionMeta)):
 
             np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
 
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, v_current, np_args, id, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current), Variable(np_args[0])
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, id = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, np_args, id, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, None, np_args, id, *args)
             out_val = Variable(output, requires_grad=True, grad_fn=grad_fn, id=id)
 
             return out_val
