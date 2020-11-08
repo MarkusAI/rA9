@@ -60,9 +60,11 @@ def conv_backward(X, W, X_col, stride=1, padding=0):
 
     W_col = W.reshape(n_filter, -1)
     dx_col = jnp.matmul(W_col.T, dout_reshaped)
+    dW = jnp.matmul(dout_reshaped , X_col.T)
+    dW = dW.reshape(W.shape)
 
     newshape = (n_x, v, h_out, w_out)
 
     dx = col2im_indices(dx_col, newshape, h_filter, w_filter, padding=padding, stride=stride)
-
-    return dx
+    grads =(dx,dW)
+    return grads

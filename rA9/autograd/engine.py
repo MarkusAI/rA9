@@ -25,7 +25,7 @@ def excute(fn, grad_in=None):
 
         for i, next_func in enumerate(fn.next_functions):
 
-            excute(next_func, grad_outs[0])
+            excute(next_func, grad_outs[i])
 
 
 def backward(variables):
