@@ -25,20 +25,25 @@ class BackwardFunction(object):
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
+        indexes = [index for index, need_grad in enumerate(ctx.needs_input_grad) if need_grad]
+
         id = ctx.id
         if id == "Spikeloss":
             grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
+
         elif id == "output":
-
             grads = np_fn(grad_outputs, *np_args)
-        elif id == "LIF":
 
+        elif id == "LIF":
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads)
         elif id == "Linear":
             weight = jnp.transpose(jnp.array(np_args[1]))
-            grads = jnp.matmul(grad_outputs, weight)
+            grad = jnp.matmul(grad_outputs, weight)
+
+            weights = jnp.transpose(jnp.matmul(np_args[0].T,grad_outputs))
+            grads = (grad, weights)
         else:
             if (len(np_args[0].shape)) == 4:
                 if len(np_args) >= 3:
@@ -108,6 +113,7 @@ class Function(with_metaclass(FunctionMeta)):
                     grad_fn.next_functions = grad_fn.next_functions + (arg.grad_fn,)
                 else:
                     if arg.requires_grad:
+
                         grad_fn.next_functions = grad_fn.next_functions + (AccumulateGrad(arg),)
             else:
                 grad_fn.needs_input_grad = grad_fn.needs_input_grad + (False,)
@@ -146,20 +152,5 @@ class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
     def backward(ctx, grad_outputs):
-        np_fn = ctx.np_fn
 
-        np_args = ctx.np_args
-        id = ctx.id
-        if id == "Spikeloss":
-            grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
-        elif id == "output":
-
-            grads = np_fn(grad_outputs, *np_args)
-        elif id == "LIF":
-            grads = np_fn(grad_outputs, *np_args)
-
-        else:
-            grad = jit(grad(np_fn))
-            grads = grad(grad_outputs, *np_args)
-
-        return grads
+        return
