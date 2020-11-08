@@ -1,7 +1,6 @@
 from collections import defaultdict
-
-import rA9
 import jax.numpy as jnp
+import rA9
 from rA9.autograd import Variable
 
 required = object()
@@ -76,6 +75,7 @@ class Optimizer(object):
         for group in self.param_groups:
             for p in group['params']:
                 if p.grad is not None:
+
                     p.grad = jnp.full(p.grad.shape,0)
 
     def step(self, closure):

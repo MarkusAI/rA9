@@ -4,7 +4,7 @@ from jax.ops import index, index_add
 from .function import AccumulateGrad
 
 
-def excute(fn, grad_in=None):
+def excute(fn, grad_in=None,v_current=None):
     if fn is not None:
 
         if isinstance(fn, AccumulateGrad):
@@ -18,14 +18,14 @@ def excute(fn, grad_in=None):
 
             return
 
-        grad_outs = fn.apply(grad_in)
+        grad_outs,v_current = fn.apply(grad_in,v_current)
 
         if type(grad_outs) is not tuple:
             grad_outs = (grad_outs,)
 
         for i, next_func in enumerate(fn.next_functions):
 
-            excute(next_func, grad_outs[i])
+            excute(next_func, grad_outs[i],v_current)
 
 
 def backward(variables):
