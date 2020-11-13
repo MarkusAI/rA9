@@ -48,5 +48,5 @@ class Output(Module):
 
     def reset_parameters(self):
         size = self.weight.data.shape
-        stdv = 1. / jnp.sqrt(size[1])
+        stdv = jnp.divide(1.0, jnp.sqrt(size[1]))
         self.weight.uniform(-stdv, stdv)
