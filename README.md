@@ -5,7 +5,7 @@ Spiking Neural Network Library Based on [JAX](https://github.com/google/jax) and
 
 The learning algorithm of this library is spike-backpropagation proposed by [Enabling Spike-Based Backpropagation for Training Deep Neural Network Architectures](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7059737/)
 
-## Compatitable Operating System
+## Compatitable Operating Systems
 
 Only supports Linux and MacOS, because of the dependency of JAX and they try to [fix](https://github.com/google/jax/pull/4843) it.
 But you can run this library in [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for running this library in windows.
