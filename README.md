@@ -7,8 +7,8 @@ The learning algorithm of this library is spike-backpropagation proposed by [Ena
 
 ## Compatitable Operating System
 
-Only supprots Linux and MacOS, because of the dependency of [JAX](https://github.com/google/jax/pull/4843) and they try to fix it.
-But you can run this library in [WSL]() for running this library in windows.
+Only supports Linux and MacOS, because of the dependency of JAX and they try to [fix](https://github.com/google/jax/pull/4843) it.
+But you can run this library in [WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10) for running this library in windows.
 
 ## Installation
 
