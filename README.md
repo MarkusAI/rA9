@@ -18,7 +18,7 @@ But you can run this library in [WSL](https://docs.microsoft.com/en-us/windows/w
 Simple, just type 
 > pip install rA9
 #### GPU
-MacOS do not support Nvidia CUDA accelerating. 
+MacOS does not support Nvidia CUDA accelerating. 
 ### Linux
 
 #### CPU
