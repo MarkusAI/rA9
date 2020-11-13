@@ -19,7 +19,7 @@ class Conv2d(Module):
     def reset_parameters(self):
         n = self.in_channels
         for k in self.kernel_size:
-            n *= k
+            n *= k # Need to solve this part as JAX function
         stdv = 1. / jnp.sqrt(n)
 
         self.weight.uniform(-stdv, stdv)
