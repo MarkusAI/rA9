@@ -157,8 +157,11 @@ class DataLoaderIter(object):
 class DataLoader(object):
 
     def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None,
-                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False):
-        self.dataset = dataset
+                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, poisson_encoding=False):
+        if poisson_encoding is True:
+            #self.dataset = dataset
+        else:
+            self.dataset = dataset
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.collate_fn = collate_fn
