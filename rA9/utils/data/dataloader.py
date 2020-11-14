@@ -1,9 +1,14 @@
 import rA9
-from .sampler import SequentialSampler, RandomSampler, BatchSampler
-import collections
 import sys
 import traceback
 import threading
+import collections
+import jax.numpy as jnp
+import jax.random as random
+from jax.ops import index, index_update, index_add
+from .sampler import SequentialSampler, RandomSampler, BatchSampler
+
+    
 if sys.version_info[0] == 2:
     import Queue as queue
     string_classes = basestring
@@ -68,6 +73,54 @@ def default_collate(batch):
 
 
     return batch
+
+
+class PoissonEncoder(object):
+    def __init__(self, duration, dt=1, key=0):
+        super().__init__()
+        self.dt = dt
+        self.duration = duration
+        self.key_x = random.PRNGKey(key)
+
+    def Encoding(self, intensities):
+        assert jnp.all(intensities >= 0), "Inputs must be non-negative"
+        assert intensities.dtype == jnp.float32 or intensities.dtype == jnp.float64, "Intensities must be of type Float."
+
+        # Get shape and size of data.
+        shape, size = jnp.shape(intensities), jnp.size(intensities)
+
+        intensities = intensities.reshape(-1)
+
+        time = self.duration // self.dt
+
+        # Compute firing rates in seconds as function of data intensity,
+        # accounting for simulation time step.
+        rate_p = jnp.zeros(size)
+        non_zero = intensities != 0
+
+        rate = index_update(rate_p, index[non_zero], 1 / intensities[non_zero] * (1000 / self.dt))
+        del rate_p
+
+        # Create Poisson distribution and sample inter-spike intervals
+        # (incrementing by 1 to avoid zero intervals).
+        intervals_p = random.poisson(key=self.key_x, lam=rate, shape=(time, len(rate))).astype(jnp.float32)
+
+        intervals = index_add(intervals_p, index[:, intensities != 0],
+                              (intervals_p[:, intensities != 0] == 0).astype(jnp.float32))
+
+        del intervals_p
+
+        # Calculate spike times by cumulatively summing over time dimension.
+
+        times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
+
+        times = index_update(times_p, times_p <= time, 0).astype(jnp.int32)
+        times = index_update(times, times_p >= time, 1).astype(jnp.bool_)
+
+        del times_p
+
+        return times.reshape(*shape, time)
+    
 
 
 class DataLoaderIter(object):
@@ -157,9 +210,10 @@ class DataLoaderIter(object):
 class DataLoader(object):
 
     def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None,
-                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, poisson_encoding=False):
+                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, poisson_encoding=False,poisson_encoding_time=110):
         if poisson_encoding is True:
-            #self.dataset = dataset
+            Pencoder = PoissonEncoder(duration=poisson_encoding_time)
+            self.dataset = Pencoder.Encoding(dataset)
         else:
             self.dataset = dataset
         self.batch_size = batch_size
