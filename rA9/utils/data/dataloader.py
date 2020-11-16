@@ -73,7 +73,6 @@ class DataLoaderIter(object):
         self.num_workers = loader.num_workers
         self.pin_memory = loader.pin_memory
         self.done_event = threading.Event()
-        self.Pencoder = loader.Pencoder
         self.sample_iter = iter(self.batch_sampler)
 
     def __len__(self):
