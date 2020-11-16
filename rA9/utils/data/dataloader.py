@@ -80,7 +80,6 @@ class DataLoaderIter(object):
         self.pin_memory = loader.pin_memory
         self.done_event = threading.Event()
         self.Pencoder = loader.Pencoder
-
         self.sample_iter = iter(self.batch_sampler)
 
     def __len__(self):
@@ -90,8 +89,10 @@ class DataLoaderIter(object):
         if self.num_workers == 0:  # same-process loading
             indices = next(self.sample_iter)  # may raise StopIteration
             batch = self.collate_fn([self.dataset[i] for i in indices])
-
-            return batch
+            if self.Pencoder == 0:
+                return batch
+            else:
+                return self.Pencoder.Encoding(batch)
 
         # check if the next sample has already been generated
         if self.rcvd_idx in self.reorder_dict:
