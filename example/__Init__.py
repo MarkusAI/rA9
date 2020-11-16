@@ -1,2 +1,1 @@
-from .data_mnist import *
-from .test import *
+from .cnn_mnist import *
