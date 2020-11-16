@@ -1,17 +1,11 @@
 import sys
+import queue
 import traceback
 import threading
-from ..encoding import PoissonEncoder
 from .sampler import SequentialSampler, RandomSampler, BatchSampler
 
-if sys.version_info[0] == 2:
-    import Queue as queue
 
-    string_classes = basestring
-else:
-    import queue
-
-    string_classes = (str, bytes)
+string_classes = (str, bytes)
 
 _use_shared_memory = False
 """Whether to use shared memory in default_collate"""
@@ -88,11 +82,8 @@ class DataLoaderIter(object):
     def __next__(self):
         if self.num_workers == 0:  # same-process loading
             indices = next(self.sample_iter)  # may raise StopIteration
-            batch = self.collate_fn([self.dataset[i] for i in indices])
-            if self.Pencoder == 0:
-                return batch
-            else:
-                return self.Pencoder.Encoding(batch)
+            return self.collate_fn([self.dataset[i] for i in indices])
+        
 
         # check if the next sample has already been generated
         if self.rcvd_idx in self.reorder_dict:
@@ -132,10 +123,7 @@ class DataLoaderIter(object):
         self._put_indices()
         if isinstance(batch, ExceptionWrapper):
             raise batch.exc_type(batch.exc_msg)
-        if self.Pencoder == 0:
-            return batch
-        else:
-            return self.Pencoder.Encoding(batch)
+        return batch
 
     def __getstate__(self):
         # TODO: add limited pickling support for sharing an iterator
@@ -185,18 +173,13 @@ class DataLoader(object):
     """
 
     def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None,
-                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, Pencoding=True,
-                 PeDur=110):
+                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False):
         self.dataset = dataset
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.collate_fn = collate_fn
         self.pin_memory = pin_memory
         self.drop_last = drop_last
-        if Pencoding:
-            self.Pencoder = PoissonEncoder(duration=PeDur)
-        else:
-            self.Pencoder = 0
 
         if batch_sampler is not None:
             if batch_size > 1 or shuffle or sampler is not None or drop_last:
