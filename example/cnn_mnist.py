@@ -54,10 +54,17 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
-        data = Variable(Pencoder.Encoding(data))
         target = Variable(target)
-        output = model(x=data, time=1)
-        loss = F.Spikeloss(outputs=output, labels=target, time_step=10)
-        loss.backward()
-        optimizer.step()
-        print("Epoch:" + str(epoch) +"Step:"+ str(i) + "loss:" + str(loss.data))
+        for t, q in enumerate(pe.Encoding(data)):
+
+            data = Variable(q, requires_grad=True)
+
+            output, time = model(data, t)
+
+            loss = F.Spikeloss(output, target, time_step=time)
+            loss.backward()  # calc gradients
+            optimizer.step()  # update gradients
+            print("Epoch:" + str(epoch) +"Time:"+ str(t) + "loss:" + str(loss.data))
+
+
+        
