@@ -42,6 +42,7 @@ class PoissonEncoder(object):
 
         times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
 
+
         times = index_update(times_p, times_p <= time, 0).astype(jnp.int32)
         times = index_update(times, times_p >= time, 1).astype(jnp.bool_)
 

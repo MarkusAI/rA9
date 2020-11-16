@@ -46,7 +46,7 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     k, i, j = get_im2col_indices(x_shape, field_height, field_width, padding, stride)
     cols = onp.array(cols)
     cols_reshaped = onp.reshape(cols,(C * field_height * field_width, -1, N))
-    cols_reshaped = onp.transpose(cols_reshaped,((2, 0, 1)))
+    cols_reshaped = onp.transpose(cols_reshaped, (2, 0, 1))
 
     onp.add.at(x_padded, (slice(None), k, i, j), cols_reshaped)
     if padding == 0:

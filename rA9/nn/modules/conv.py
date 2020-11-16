@@ -26,6 +26,7 @@ class Conv2d(Module):
 
     def forward(self, input):
         out = F.conv2d(input=input, weights=self.weight, stride=self.stride, padding=self.padding)
+
         return out
 
     def __repr__(self):

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="rA9",
-    version='0.0.4',
+    version='0.0.8',
     license='MIT',
     author="Dongyeong Kim, Jaeseok Lee, Junho Yeo",
     author_email="dongyeongkim33@gmail.com, jepetolee@gmail.com, hanaro0704@gmail.com",
@@ -17,7 +17,9 @@ setup(
 
     install_requires=[
         "jax>=0.2.0",
-        "jaxlib>=0.1.55"
+        "jaxlib>=0.1.55",
+        "future>=0.18.2",
+        "h5py>=2.3.0"
     ]
 
 )

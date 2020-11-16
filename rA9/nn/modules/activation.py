@@ -45,9 +45,10 @@ class LIF(Module):
 
         out, v_current_ret, spike_time = F.LIF(input, v_current, self.tau_m, self.Vth, self.dt, spike_time_list, time,
                                                gamma)
-        self.update_spike(key=self.key, layer=out)
-        self.v_current.save_data(v_current_ret)
         self.spike_time_list.save_data(spike_time)
+
+        self.v_current.save_data(v_current_ret)
+
 
         return out
 

@@ -59,6 +59,7 @@ for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
+
             data = Variable(q,requires_grad=True)
 
             output = model(data, t)
@@ -67,6 +68,6 @@ for epoch in range(15):
             loss.backward()  # calc gradients
             optimizer.step()  # update gradients
 
-            if i % 1 == 0:
-                 print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
+        if i % 1 == 0:
+            print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
         i += 1

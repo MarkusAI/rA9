@@ -40,16 +40,15 @@ def pool_forward(X, W, size=2, stride=2):
 
     X_col = im2col_indices(X_reshaped, size, size, padding=0, stride=stride)
 
-    max_idx_X = jnp.mean(X_col, axis=0, dtype='int32')
     n_filter, v, h_filter, w_filter = W.shape
     W_col = W.reshape(n_filter, -1)
 
     out = jnp.matmul(W_col, X_col)
-    out = jnp.array(jnp.take(out, max_idx_X))
+
+    out = jnp.mean(out,axis=0)
     out = out.reshape(h_out, w_out, n, d)
     out = jnp.transpose(out, (2, 3, 0, 1))
     out = jnp.array(out, dtype='float32')
-
     return out
 
 
@@ -63,6 +62,7 @@ def pool_backward(X,v_currnet, W, size=2, stride=2):
 
     dx = jnp.ravel(dx) / (size * size)
     dX = dx
+
     for i in range((size * size) - 1):
         dX = jnp.append(dX, dx, axis=0)
     dx = jnp.reshape(dX, (size * size, -1))
