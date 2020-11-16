@@ -1,21 +1,17 @@
-import rA9
 import sys
 import traceback
 import threading
-import collections
-import jax.numpy as jnp
-import jax.random as random
-from jax.ops import index, index_update, index_add
+from ..encoding import PoissonEncoder
 from .sampler import SequentialSampler, RandomSampler, BatchSampler
 
-    
 if sys.version_info[0] == 2:
     import Queue as queue
+
     string_classes = basestring
 else:
     import queue
-    string_classes = (str, bytes)
 
+    string_classes = (str, bytes)
 
 _use_shared_memory = False
 """Whether to use shared memory in default_collate"""
@@ -70,57 +66,7 @@ def _pin_memory_loop(in_queue, out_queue, done_event):
 
 
 def default_collate(batch):
-
-
     return batch
-
-
-class PoissonEncoder(object):
-    def __init__(self, duration, dt=1, key=0):
-        super().__init__()
-        self.dt = dt
-        self.duration = duration
-        self.key_x = random.PRNGKey(key)
-
-    def Encoding(self, intensities):
-        assert jnp.all(intensities >= 0), "Inputs must be non-negative"
-        assert intensities.dtype == jnp.float32 or intensities.dtype == jnp.float64, "Intensities must be of type Float."
-
-        # Get shape and size of data.
-        shape, size = jnp.shape(intensities), jnp.size(intensities)
-
-        intensities = intensities.reshape(-1)
-
-        time = self.duration // self.dt
-
-        # Compute firing rates in seconds as function of data intensity,
-        # accounting for simulation time step.
-        rate_p = jnp.zeros(size)
-        non_zero = intensities != 0
-
-        rate = index_update(rate_p, index[non_zero], 1 / intensities[non_zero] * (1000 / self.dt))
-        del rate_p
-
-        # Create Poisson distribution and sample inter-spike intervals
-        # (incrementing by 1 to avoid zero intervals).
-        intervals_p = random.poisson(key=self.key_x, lam=rate, shape=(time, len(rate))).astype(jnp.float32)
-
-        intervals = index_add(intervals_p, index[:, intensities != 0],
-                              (intervals_p[:, intensities != 0] == 0).astype(jnp.float32))
-
-        del intervals_p
-
-        # Calculate spike times by cumulatively summing over time dimension.
-
-        times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
-
-        times = index_update(times_p, times_p <= time, 0).astype(jnp.int32)
-        times = index_update(times, times_p >= time, 1).astype(jnp.bool_)
-
-        del times_p
-
-        return times.reshape(*shape, time)
-    
 
 
 class DataLoaderIter(object):
@@ -133,9 +79,9 @@ class DataLoaderIter(object):
         self.num_workers = loader.num_workers
         self.pin_memory = loader.pin_memory
         self.done_event = threading.Event()
+        self.Pencoder = loader.Pencoder
 
         self.sample_iter = iter(self.batch_sampler)
-
 
     def __len__(self):
         return len(self.batch_sampler)
@@ -166,7 +112,7 @@ class DataLoaderIter(object):
                 continue
             return self._process_next_batch(batch)
 
-    next = __next__  #
+    next = __next__  # Python 2 compatibility
 
     def __iter__(self):
         return self
@@ -185,7 +131,10 @@ class DataLoaderIter(object):
         self._put_indices()
         if isinstance(batch, ExceptionWrapper):
             raise batch.exc_type(batch.exc_msg)
-        return batch
+        if self.Pencoder == 0:
+            return batch
+        else:
+            return self.Pencoder.Encoding(batch)
 
     def __getstate__(self):
         # TODO: add limited pickling support for sharing an iterator
@@ -208,19 +157,45 @@ class DataLoaderIter(object):
 
 
 class DataLoader(object):
+    """
+    Data loader. Combines a dataset and a sampler, and provides
+    single- or multi-process iterators over the dataset.
+    Arguments:
+        dataset (Dataset): dataset from which to load the data.
+        batch_size (int, optional): how many samples per batch to load
+            (default: 1).
+        shuffle (bool, optional): set to ``True`` to have the data reshuffled
+            at every epoch (default: False).
+        sampler (Sampler, optional): defines the strategy to draw samples from
+            the dataset. If specified, ``shuffle`` must be False.
+        batch_sampler (Sampler, optional): like sampler, but returns a batch of
+            indices at a time. Mutually exclusive with batch_size, shuffle,
+            sampler, and drop_last.
+        num_workers (int, optional): how many subprocesses to use for data
+            loading. 0 means that the data will be loaded in the main process
+            (default: 0)
+        collate_fn (callable, optional): merges a list of samples to form a mini-batch.
+        pin_memory (bool, optional): If ``True``, the data loader will copy tensors
+            into CUDA pinned memory before returning them.
+        drop_last (bool, optional): set to ``True`` to drop the last incomplete batch,
+            if the dataset size is not divisible by the batch size. If False and
+            the size of dataset is not divisible by the batch size, then the last batch
+            will be smaller. (default: False)
+    """
 
     def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None,
-                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, poisson_encoding=False,poisson_encoding_time=110):
-        if poisson_encoding is True:
-            Pencoder = PoissonEncoder(duration=poisson_encoding_time)
-            self.dataset = Pencoder.Encoding(dataset)
-        else:
-            self.dataset = dataset
+                 num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False, Pencoding=True,
+                 PeDur=110):
+        self.dataset = dataset
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.collate_fn = collate_fn
         self.pin_memory = pin_memory
         self.drop_last = drop_last
+        if Pencoding:
+            self.Pencoder = PoissonEncoder(duration=PeDur)
+        else:
+            self.Pencoder = 0
 
         if batch_sampler is not None:
             if batch_size > 1 or shuffle or sampler is not None or drop_last:
