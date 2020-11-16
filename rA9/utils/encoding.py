@@ -47,4 +47,4 @@ class PoissonEncoder(object):
 
         del times_p
 
-        return times.reshape(*shape, time)
+        return times.reshape(time, *shape)
