@@ -28,14 +28,14 @@ class SNN(Module):
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time):
-        x = self.active1(self.conv1(x), time)
-        x = self.active2(self.pool1(x), time)
-        x = self.active3(self.conv2(x), time)
-        x = self.active4(self.pool2(x), time)
+        x, timed = self.active1(self.conv1(x), time,time )
+        x, timed = self.active2(self.pool1(x), timed,time)
+        x, timed = self.active3(self.conv2(x), timed,time)
+        x, timed = self.active4(self.pool2(x), timed,time)
         x = x.view(-1, 320)
-        x = self.active5(self.fc1(x), time)
-        x = self.active6(self.fc2(x), time)
-        return self.output(x, time)
+        x, timed = self.active5(self.fc1(x), timed,time)
+        x, timed = self.active6(self.fc2(x), timed,time)
+        return self.output(x, timed,time)
 
 
 model = SNN()
@@ -60,14 +60,14 @@ for epoch in range(15):
         target = Variable(target)
         for t, q in enumerate(pe.Encoding(data)):
 
-            data = Variable(q,requires_grad=True)
+            data = Variable(q, requires_grad=True)
 
-            output = model(data, t)
-            
-            loss = F.Spikeloss(output, target, time_step=t + 1)
+            output, time = model(data, t)
+
+            loss = F.Spikeloss(output, target, time_step=time)
             loss.backward()  # calc gradients
             optimizer.step()  # update gradients
 
-        if i % 1 == 0:
-            print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
+            if i % 1 == 0:
+                print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
         i += 1

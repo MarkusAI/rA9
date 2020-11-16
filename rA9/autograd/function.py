@@ -139,11 +139,12 @@ class Function(with_metaclass(FunctionMeta)):
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
 
-            np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
+            np_fn, np_args, output, v_current, gamma, id = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
+
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
-                   Variable(data=v_current), Variable(np_args[0])
+                   Variable(data=v_current), Variable(data=gamma)
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()

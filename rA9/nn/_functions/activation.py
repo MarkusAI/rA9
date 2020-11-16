@@ -32,7 +32,7 @@ class LIF(Function):
         grad_np_args = (s_time_list, time, tau_m, gamma, Vth)
         id = "LIF"
 
-        return grad_fn, grad_np_args, spike, v_current, id
+        return grad_fn, grad_np_args, spike, v_current,gamma, id
 
     @staticmethod
     def backward(ctx, grad_output):
