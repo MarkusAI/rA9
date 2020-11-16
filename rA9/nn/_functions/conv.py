@@ -48,7 +48,7 @@ def conv_forward(X, W, stride=1, padding=0):
     return out, X_col
 
 
-def conv_backward(X,v_current, W, X_col, stride=1, padding=0):
+def conv_backward(X, v_current, W, X_col, stride=1, padding=0):
     n_filter, v, h_filter, w_filter = W.shape
     n_x, d_x, h_x, w_x = X.shape
     h_out = (h_x - 1) * stride + h_filter - 2 * padding
@@ -57,14 +57,14 @@ def conv_backward(X,v_current, W, X_col, stride=1, padding=0):
     h_out, w_out = int(h_out), int(w_out)
 
     dout_reshaped = jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1)
-    wout_spike = jnp.multiply(jnp.transpose(X,(1,2,3,0)).reshape(n_filter,-1),dout_reshaped)
+    wout_spike = jnp.multiply(jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1), dout_reshaped)
     W_col = W.reshape(n_filter, -1)
     dx_col = jnp.matmul(W_col.T, dout_reshaped)
-    dW = jnp.matmul(wout_spike , X_col.T)
+    dW = jnp.matmul(wout_spike, X_col.T)
     dW = dW.reshape(W.shape)
 
     newshape = (n_x, v, h_out, w_out)
 
     dx = col2im_indices(dx_col, newshape, h_filter, w_filter, padding=padding, stride=stride)
-    grads =(dx,dW)
+    grads = (dx, dW)
     return grads
