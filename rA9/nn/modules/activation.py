@@ -32,9 +32,9 @@ class LIF(Module):
         def recall_data(self):
             return self.data
 
-    def forward(self, input, time):
+    def forward(self, input, time, activetime):
 
-        if time == 0:
+        if activetime == 0:
             v_current = self.v_current.init_data(input.data.shape)
             gamma = self.gamma.init_data(input.data.shape)
             spike_time_list = self.spike_time_list.init_data(input.data.shape)
@@ -43,29 +43,18 @@ class LIF(Module):
             gamma = self.gamma.recall_data()
             spike_time_list = self.spike_time_list.recall_data()
 
-        out, v_current_ret, spike_time = F.LIF(input, v_current, self.tau_m, self.Vth, self.dt, spike_time_list, time,
+        out, v_current_ret, gamma_t = F.LIF(input, v_current, self.tau_m, self.Vth, self.dt, spike_time_list, time,
                                                gamma)
-        self.update_spike(key=self.key, layer=out)
-        self.v_current.save_data(v_current_ret)
-        self.spike_time_list.save_data(spike_time)
 
-        return out
+        self.gamma.save_data(gamma_t)
+
+        self.v_current.save_data(v_current_ret)
+
+
+        return out , time+self.dt*self.time_step
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
-
-
-class ReLU(Module):
-
-    def __init__(self):
-        super(ReLU, self).__init__()
-
-    def forward(self, input):
-        return F.relu(input)
-
-
-
-
 
