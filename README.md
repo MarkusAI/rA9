@@ -33,4 +33,4 @@ and install rA9 as following:
 
 It also supports TPU in [google colab](https://colab.research.google.com/)
 
-*disclaimer: This project is in progress. 
+Disclaimer: This project is in still progress.
