@@ -1,13 +1,11 @@
 import rA9.nn as nn
 from rA9.optim import Adam
+import rA9.nn.functional as F
 from rA9.autograd import Variable
 from rA9.nn.modules import Module
-import rA9.nn.functional as F
-from example.data_mnist import MnistDataset, collate_fn
-from rA9.utils.data import DataLoader
 from rA9.utils import PoissonEncoder
-
-batch_size = 16
+from rA9.utils.data import DataLoader
+from rA9.datasets.mnist import MnistDataset, collate_fn
 
 
 class SNN(Module):
@@ -39,34 +37,27 @@ class SNN(Module):
 
 
 model = SNN()
+model.train()
+
+PeDurx = 50
+batch_size = 16
+Pencoder = PoissonEncoder(duration=PeDurx)
+optimizer = Adam(model.parameters(), lr=0.01)
 
 train_loader = DataLoader(dataset=MnistDataset(training=True, flatten=False),
-                          collate_fn=collate_fn,
-                          shuffle=True,
+                          collate_fn=collate_fn, shuffle=True,
                           batch_size=batch_size)
 
 test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
-                         collate_fn=collate_fn,
-                         shuffle=False,
+                         collate_fn=collate_fn, shuffle=False,
                          batch_size=batch_size)
 
-model.train()
-optimizer = Adam(model.parameters(), lr=0.01)
-duration = 100
 for epoch in range(15):
-    pe = PoissonEncoder(duration=duration)
-    model.train()
     for i, (data, target) in enumerate(train_loader):
+        data = Variable(Pencoder.Encoding(data))
         target = Variable(target)
-        for t, q in enumerate(pe.Encoding(data)):
-            data = Variable(q,requires_grad=True)
-
-            output = model(data, t)
-            
-            loss = F.Spikeloss(output, target, time_step=t + 1)
-            loss.backward()  # calc gradients
-            optimizer.step()  # update gradients
-
-            if i % 1 == 0:
-                 print('Train Step: {}\tLoss: {:.3f}'.format(i, loss.data))
-        i += 1
+        output = model(x=data, time=1)
+        loss = F.Spikeloss(outputs=output, labels=target, time_step=10)
+        loss.backward()
+        optimizer.step()
+        print("Epoch:" + str(epoch) +"Step:"+ str(i) + "loss:" + str(loss.data))
