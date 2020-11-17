@@ -41,10 +41,12 @@ class PoissonEncoder(object):
         # Calculate spike times by cumulatively summing over time dimension.
 
         times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
-
-        times = index_update(times_p, times_p <= time, 0).astype(jnp.int32)
-        times = index_update(times, times_p >= time, 1).astype(jnp.bool_)
+        times = index_update(times_p, times_p >= time+1, 0).astype(bool)
 
         del times_p
 
-        return times.reshape(time, *shape)
+        spikes_p = jnp.zeros(shape=(time + 1, size))
+        spikes = index_update(spikes_p, index[times], 1)
+        spikes = spikes[1:]
+        spikes = jnp.transpose(spikes, (1, 0)).astype(jnp.float32)
+        return spikes.reshape(time, *shape)
