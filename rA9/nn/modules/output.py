@@ -43,7 +43,7 @@ class Output(Module):
                                       v_current=v_current,
                                       tau_m=self.tau_m, dt=self.dt,
                                       time_step=time + self.time_step, Vth=self.Vth, gamma=self.gamma)
-
+        self.v_current.save_v_current(v_current_ret)
         return out, time + self.dt * self.time_step
 
     def reset_parameters(self):
