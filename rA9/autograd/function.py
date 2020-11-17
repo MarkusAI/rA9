@@ -38,7 +38,6 @@ class BackwardFunction(object):
         elif id == "LIF":
             v_currents = ctx.v_current
             grads = np_fn(grad_outputs, *np_args)
-
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads,copy=False)
         elif id == "Linear":
