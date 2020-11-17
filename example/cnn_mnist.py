@@ -26,22 +26,22 @@ class SNN(Module):
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time):
-        x = self.active1(self.conv1(x), time)
-        x = self.active2(self.pool1(x), time)
-        x = self.active3(self.conv2(x), time)
-        x = self.active4(self.pool2(x), time)
+        x, intime = self.active1(self.conv1(x), time, time)
+        x, intime = self.active2(self.pool1(x), intime, time)
+        x, intime = self.active3(self.conv2(x), intime, time)
+        x, intime = self.active4(self.pool2(x), intime, time)
         x = x.view(-1, 320)
-        x = self.active5(self.fc1(x), time)
-        x = self.active6(self.fc2(x), time)
-        return self.output(x, time)
+        x, intime = self.active5(self.fc1(x), intime, time)
+        x, intime = self.active6(self.fc2(x), intime, time)
+        return self.output(x, intime, time)
 
 
 model = SNN()
 model.train()
 
 PeDurx = 50
-batch_size = 16
-Pencoder = PoissonEncoder(duration=PeDurx)
+batch_size = 50
+pe = PoissonEncoder(duration=PeDurx)
 optimizer = Adam(model.parameters(), lr=0.01)
 
 train_loader = DataLoader(dataset=MnistDataset(training=True, flatten=False),
@@ -55,8 +55,8 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-        for t, q in enumerate(pe.Encoding(data)):
 
+        for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q, requires_grad=True)
 
             output, time = model(data, t)
@@ -64,7 +64,4 @@ for epoch in range(15):
             loss = F.Spikeloss(output, target, time_step=time)
             loss.backward()  # calc gradients
             optimizer.step()  # update gradients
-            print("Epoch:" + str(epoch) +"Time:"+ str(t) + "loss:" + str(loss.data))
-
-
-        
+            print("Epoch:" + str(epoch) + " Time: " + str(t) + " loss: " + str(loss.data))
