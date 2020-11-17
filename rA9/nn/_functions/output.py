@@ -22,7 +22,7 @@ class Output(Function):
                                (1 / Vth * (1 + jnp.multiply(1 / gamma, jnp.sum(
                                    jnp.multiply(-1 / tau_m, jnp.exp(time - s_time_list)))))))
             out = jnp.where(out == jnp.inf, 0, out)
-            out = jnp.nan_to_num(out)
+            out = jnp.nan_to_num(out, copy=False)
 
             dw = jnp.matmul(input.T, out)
 
