@@ -20,8 +20,7 @@ class BackwardFunction(object):
         return self.backward(self, *args)
 
     @staticmethod
-    def backward(ctx, grad_outputs, v_current):
-        v_currents = None
+    def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
@@ -31,12 +30,10 @@ class BackwardFunction(object):
             grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:]))
 
         elif id == "output":
-            v_currents = ctx.v_current
 
             grads = np_fn(grad_outputs, *np_args)
 
         elif id == "LIF":
-            v_currents = ctx.v_current
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads,copy=False)
@@ -44,26 +41,21 @@ class BackwardFunction(object):
             weight = jnp.transpose(jnp.array(np_args[1]))
             grad = jnp.matmul(grad_outputs, weight)
 
-            weight_grad = jnp.multiply(grad_outputs, v_current)
-
-            weights = jnp.transpose(jnp.matmul(np_args[0].T,weight_grad))
-            v_currents = v_current
+            weights = jnp.transpose(jnp.matmul(np_args[0].T,grad_outputs))
             grads = (grad, weights)
         else:
             if (len(np_args[0].shape)) == 4:
                 if len(np_args) >= 3:
-                    grads = np_fn(grad_outputs,v_current, *np_args)
+                    grads = np_fn(grad_outputs, *np_args)
                 else:
                     shape = (grad_outputs.shape[0], np_args[0].shape[1], np_args[0].shape[2], np_args[0].shape[3])
                     grad_outputs = grad_outputs.reshape(shape)
                     grads = grad_outputs
-                v_currents = v_current
 
             else:
                 grads = grad_outputs
-                v_currents = v_current
 
-        return grads, v_currents
+        return grads
 
 
 class FunctionMeta(type):
@@ -98,14 +90,14 @@ class AccumulateGrad():
 class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
-    def setup_grad_fn(grad_fn, np_fn, v_current, np_args, id, *args):
+    def setup_grad_fn(grad_fn, np_fn, spike, np_args, id, *args):
         grad_fn.saved_variables = ()
         grad_fn.next_functions = ()
         grad_fn.needs_input_grad = ()
         grad_fn.np_fn = np_fn
         grad_fn.args = args
         grad_fn.np_args = np_args
-        grad_fn.v_current = v_current
+        grad_fn.spike = spike
         grad_fn.id = id
 
         for arg in args:

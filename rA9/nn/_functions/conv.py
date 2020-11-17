@@ -48,7 +48,8 @@ def conv_forward(X, W, stride=1, padding=0):
     return out, X_col
 
 
-def conv_backward(X, v_current, W, X_col, stride=1, padding=0):
+def conv_backward(X, W, X_col, stride=1, padding=0):
+
     n_filter, v, h_filter, w_filter = W.shape
     n_x, d_x, h_x, w_x = X.shape
     h_out = (h_x - 1) * stride + h_filter - 2 * padding
