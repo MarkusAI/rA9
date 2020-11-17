@@ -37,7 +37,6 @@ class BackwardFunction(object):
         elif id == "LIF":
             spike = ctx.spike
             grads = np_fn(grad_outputs, *np_args)
-
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads,copy=False)
         elif id == "Linear":

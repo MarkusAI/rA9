@@ -1,7 +1,7 @@
+from jax import jit
 import jax.numpy as jnp
 from rA9.autograd import Function
 from rA9.autograd import Variable
-from jax import jit
 
 
 class Output(Function):
