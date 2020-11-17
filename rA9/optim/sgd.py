@@ -1,4 +1,4 @@
-import jax.numpy as np
+'''import jax.numpy as np
 from .optimizer import Optimizer
 
 
@@ -35,3 +35,4 @@ class SGD(Optimizer):
                 p.data += - group['lr'] * d_val
 
         return loss
+'''
