@@ -40,7 +40,7 @@ class BackwardFunction(object):
             grads = np_fn(grad_outputs, *np_args)
 
             grads = jnp.where(grads == jnp.inf, 0, grads)
-            grads = jnp.nan_to_num(grads)
+            grads = jnp.nan_to_num(grads,copy=False)
         elif id == "Linear":
             weight = jnp.transpose(jnp.array(np_args[1]))
             grad = jnp.matmul(grad_outputs, weight)
