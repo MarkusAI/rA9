@@ -34,8 +34,8 @@ class Output(Module):
         def recall_v_current(self):
             return self.v_current
 
-    def forward(self, input, time):
-        if time == 0:
+    def forward(self, input, time, activetime):
+        if activetime == 0:
             v_current = self.v_current.init_v_current(size=(1, self.out_features))
         else:
             v_current = self.v_current.recall_v_current()
@@ -44,7 +44,7 @@ class Output(Module):
                                       tau_m=self.tau_m, dt=self.dt,
                                       time_step=time + self.time_step, Vth=self.Vth, gamma=self.gamma)
 
-        return out
+        return out, time + self.dt * self.time_step
 
     def reset_parameters(self):
         size = self.weight.data.shape
