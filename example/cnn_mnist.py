@@ -6,7 +6,7 @@ from rA9.autograd import Variable
 from rA9.nn.modules import Module
 from rA9.utils import PoissonEncoder
 from rA9.utils.data import DataLoader
-from rA9.dataset.mnist import MnistDataset, collate_fn
+from rA9.datasets.mnist import MnistDataset, collate_fn
 
 
 class SNN(Module):
