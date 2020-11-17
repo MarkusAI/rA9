@@ -20,7 +20,7 @@ class BackwardFunction(object):
         return self.backward(self, *args)
 
     @staticmethod
-    def backward(ctx, grad_outputs, spike):
+    def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
@@ -30,12 +30,10 @@ class BackwardFunction(object):
             grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:]))
 
         elif id == "output":
-            spike = ctx.spike
 
             grads = np_fn(grad_outputs, *np_args)
 
         elif id == "LIF":
-            spike = ctx.spike
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
             grads = jnp.nan_to_num(grads,copy=False)
@@ -57,7 +55,7 @@ class BackwardFunction(object):
             else:
                 grads = grad_outputs
 
-        return grads, spike
+        return grads
 
 
 class FunctionMeta(type):
