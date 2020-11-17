@@ -28,7 +28,7 @@ class BackwardFunction(object):
 
         id = ctx.id
         if id == "Spikeloss":
-            grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:])) / np_args[2]
+            grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:]))
 
         elif id == "output":
             v_currents = ctx.v_current
@@ -139,12 +139,12 @@ class Function(with_metaclass(FunctionMeta)):
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
 
-            np_fn, np_args, output, v_current, gamma, id = cls.forward(grad_fn, *args)
+            np_fn, np_args, output, v_current, gamma, spike_time_list, id = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
 
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
-                   Variable(data=v_current), Variable(data=gamma)
+                   Variable(data=v_current), Variable(data=gamma), Variable(data=spike_time_list)
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
