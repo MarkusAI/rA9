@@ -9,7 +9,7 @@ class Add(Function):
     @staticmethod
     def forward(ctx, a, b):
         def np_fn(a, b):
-            return a + b
+            return np.add(a,b)
 
         id = "Add"
         np_args = (a.data, b.data)

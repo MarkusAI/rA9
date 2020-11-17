@@ -22,7 +22,7 @@ def lif_grad(grad_output, *args):
 
 def loss_grad(input, target, timestep):
     def np_fn(input, target):
-        return (1 / 2) * jnp.sum((jnp.argmax(input) - target.T) ** 2)
+        return jnp.multiply(0.5,jnp.sum(jnp.square(jnp.argmax(input) - target.T)))
 
     return (grad(np_fn)(input, target)) / timestep
 

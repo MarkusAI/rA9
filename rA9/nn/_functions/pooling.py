@@ -44,15 +44,15 @@ def pool_forward(X, W, size=2, stride=2):
     W_col = W.reshape(n_filter, -1)
 
     out = jnp.matmul(W_col, X_col)
-
     out = jnp.mean(out,axis=0)
     out = out.reshape(h_out, w_out, n, d)
     out = jnp.transpose(out, (2, 3, 0, 1))
     out = jnp.array(out, dtype='float32')
+
     return out
 
 
-def pool_backward(X,v_currnet, W, size=2, stride=2):
+def pool_backward(X, W, size=2, stride=2):
     n, d, h, w = X.shape
     h_out = (h - 1) * stride + size
     w_out = (w - 1) * stride + size
@@ -62,7 +62,6 @@ def pool_backward(X,v_currnet, W, size=2, stride=2):
 
     dx = jnp.ravel(dx) / (size * size)
     dX = dx
-
     for i in range((size * size) - 1):
         dX = jnp.append(dX, dx, axis=0)
     dx = jnp.reshape(dX, (size * size, -1))

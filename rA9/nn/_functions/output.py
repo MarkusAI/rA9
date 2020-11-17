@@ -15,18 +15,10 @@ class Output(Function):
 
         def np_fn(input_np, weights_np, v_current, time_step, dt, tau_m):
             return jnp.divide(
-                jnp.multiply(jnp.subtract(jnp.matmul(input_np, weights_np), v_current), dt * tau_m), time_step)
+                jnp.multiply(jnp.subtract(jnp.matmul(input_np, weights_np), v_current), dt * tau_m)+v_current, time_step)
 
         def grad_fn(grad_outputs, input, s_time_list, time, tau_m, gamma, Vth):
-            out = jnp.multiply(grad_outputs,
-                               (1 / Vth * (1 + jnp.multiply(1 / gamma, jnp.sum(
-                                   jnp.multiply(-1 / tau_m, jnp.exp(time - s_time_list)))))))
-            out = jnp.where(out == jnp.inf, 0, out)
-            out = jnp.nan_to_num(out)
-
-            dw = jnp.matmul(input.T, out)
-
-            return (out, dw)
+            return (jnp.divide(grad_outputs,time), jnp.matmul(input.T,jnp.divide(grad_outputs,time)))
 
         np_args = (input.data, weights.data, v_current.data, time_step, dt, tau_m)
         spike = jit(np_fn)(*np_args)
