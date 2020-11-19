@@ -14,7 +14,6 @@ class Output(Module):
         self.time_step = 1
         self.Vth = Vth
         self.dt = dt
-        self.gamma = 0
 
         self.reset_parameters()
 
@@ -41,7 +40,7 @@ class Output(Module):
         out, v_current_ret = F.Output(input=input,
                                       v_current=v_current,
                                       tau_m=self.tau_m, dt=self.dt,
-                                      time_step=time + self.time_step, Vth=self.Vth, gamma=self.gamma)
+                                      time_step=time + self.time_step)
         self.v_current.save_v_current(v_current_ret)
         return out, time + self.dt * self.time_step
 
