@@ -14,6 +14,7 @@ class Output(Module):
         self.time_step = 1
         self.Vth = Vth
         self.dt = dt
+        self.gamma = 0
 
         self.reset_parameters()
 
