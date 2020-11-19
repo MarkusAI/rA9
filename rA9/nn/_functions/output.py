@@ -22,7 +22,7 @@ class Output(Function):
         np_args = (input.data, v_current.data, time_step, dt, tau_m)
         spike = jit(np_fn)(*np_args)
 
-        grad_np_args = (spike, input.data, time_step, tau_m, gamma.data, Vth)
+        grad_np_args = (spike, input.data, time_step, tau_m)
 
         id = "output"
         return grad_fn, grad_np_args, spike, v_current.data, id
