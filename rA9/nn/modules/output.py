@@ -37,7 +37,7 @@ class Output(Module):
             v_current = self.v_current.init_v_current(size=(1, self.out_features))
         else:
             v_current = self.v_current.recall_v_current()
-        out, v_current_ret = F.Output(input=input, weights=self.weight,
+        out, v_current_ret = F.Output(input=input,
                                       v_current=v_current,
                                       tau_m=self.tau_m, dt=self.dt,
                                       time_step=time + self.time_step, Vth=self.Vth, gamma=self.gamma)
