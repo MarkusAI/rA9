@@ -20,10 +20,13 @@ class SNN(Module):
         self.active3 = nn.LIF()
         self.pool2 = nn.Pooling(size=2, channel=20)
         self.active4 = nn.LIF()
-        self.fc1 = nn.Linear(out_features=50, in_features=320)
+        self.fc1 = nn.Linear(out_features=100, in_features=320)
         self.active5 = nn.LIF()
-        self.fc2 = nn.Linear(out_features=10, in_features=50)
+        self.fc2 = nn.Linear(out_features=50, in_features=100)
         self.active6 = nn.LIF()
+        self.fc3 = nn.Linear(out_features=30, in_features=50)
+        self.active7 = nn.LIF()
+        self.fc4 =nn.Linear(out_features=10, in_features=30)
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time):
@@ -33,7 +36,9 @@ class SNN(Module):
         x, intime = self.active4(self.pool2(x), intime, time)
         x = x.view(-1, 320)
         x, intime = self.active5(self.fc1(x), intime, time)
-        return self.output(self.fc2(x), intime, time)
+        x, intime = self.active6(self.fc2(x),intime,time)
+        x, intime = self.active7(self.fc3(x), intime, time)
+        return self.output(self.fc4(x), intime, time)
 
 
 model = SNN()

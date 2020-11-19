@@ -28,7 +28,8 @@ class LIF(Function):
 
         spike_time = spike * time
         s_time_list = np.concatenate((spike_time, s_time_list.data))
-        grad_np_args = (s_time_list, time, tau_m, gamma, Vth)
+        grad_np_args = (spike, time, tau_m, gamma, Vth)
+
         id = "LIF"
 
         return grad_fn, grad_np_args, spike, v_current, gamma, s_time_list, id
