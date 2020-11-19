@@ -13,8 +13,8 @@ def conv2d(input, weights, stride=1, padding=0):
     return _functions.Conv2d.apply(input, weights, stride, padding)
 
 
-def Output(input, weights, v_current, tau_m, dt, time_step, Vth, gamma):
-    return _functions.Output.apply(input, weights, v_current, tau_m, dt, time_step, Vth, gamma)
+def Output(input, v_current, tau_m, dt, time_step):
+    return _functions.Output.apply(input, v_current, tau_m, dt, time_step)
 
 
 def dropout(input, p=0.5, training=False):
