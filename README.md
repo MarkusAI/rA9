@@ -3,7 +3,7 @@
 
 Spiking Neural Network Library Based on [JAX](https://github.com/google/jax) and referencing codes from [bintorch](https://github.com/bingo619/bintorch)
 
-The learning algorithm of this library is spike-backpropagation proposed by [Enabling Spike-Based Backpropagation for Training Deep Neural Network Architectures](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7059737/)
+The learning algorithm of this library is spike-based backpropagation proposed by [Enabling Spike-Based Backpropagation for Training Deep Neural Network Architectures](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7059737/)
 
 ## Compatitable Operating Systems
 
