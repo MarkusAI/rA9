@@ -12,10 +12,7 @@ class Spikeloss(Function):
         assert isinstance(target, Variable)
 
         def np_fn(input_np, target_np, time_step):
-            if target_np.shape != input_np.shape:
-                return jnp.sum((input_np - jnp.eye(jnp.max(target_np)+1)[target_np]) ** 2) / 2
-            else:
-                return jnp.sum((input_np - target_np) ** 2) / 2
+            return jnp.sum((input_np - jnp.eye(jnp.max(target_np)+1)[target_np]) ** 2) / 2
 
         np_args = (input.data, target.data, time_step)
         id = "Spikeloss"
