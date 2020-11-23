@@ -1,5 +1,6 @@
-from jax import lax
+from jax import jit
 import jax.numpy as jnp
+
 from rA9.autograd import Function
 from rA9.autograd import Variable
 
@@ -17,7 +18,7 @@ class Dropout(Function):
             return input_np * noise
         np_args = (input.data, noise)
         id = "Dropout"
-        return np_fn, np_args, np_fn(*np_args),id
+        return np_fn, np_args, jit(np_fn)(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):
