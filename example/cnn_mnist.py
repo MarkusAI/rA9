@@ -28,16 +28,17 @@ class SNN(Module):
         self.active7 = nn.LIF()
         self.fc4 =nn.Linear(out_features=10, in_features=30)
         self.output = nn.Output(out_features=10)
+        self.dr = nn.Dropout(p=0.25)
 
     def forward(self, x, time):
-        x, intime = self.active1(self.conv1(x), time, time)
-        x, intime = self.active2(self.pool1(x), intime, time)
-        x, intime = self.active3(self.conv2(x), intime, time)
-        x, intime = self.active4(self.pool2(x), intime, time)
+        x, intime = self.active1(self.conv1(x), time, time); x = self.dr(x)
+        x, intime = self.active2(self.pool1(x), intime, time); x = self.dr(x)
+        x, intime = self.active3(self.conv2(x), intime, time); x = self.dr(x)
+        x, intime = self.active4(self.pool2(x), intime, time); x = self.dr(x)
         x = x.view(-1, 320)
-        x, intime = self.active5(self.fc1(x), intime, time)
-        x, intime = self.active6(self.fc2(x),intime,time)
-        x, intime = self.active7(self.fc3(x), intime, time)
+        x, intime = self.active5(self.fc1(x), intime, time); x = self.dr(x)
+        x, intime = self.active6(self.fc2(x),intime,time); x = self.dr(x)
+        x, intime = self.active7(self.fc3(x), intime, time); x = self.dr(x)
         return self.output(self.fc4(x), intime, time)
 
 
