@@ -15,7 +15,7 @@ class Linear(Module):
 
     def reset_parameters(self):
         size = self.weight.data.shape
-        stdv = jnp.divide(self.reskey,jnp.sqrt(size[1]))
+        stdv = np.sqrt(self.reskey/size[1])
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input):
