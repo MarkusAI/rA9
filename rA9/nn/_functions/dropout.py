@@ -8,14 +8,13 @@ class Dropout(Function):
     @staticmethod
     def forward(ctx, input, p=0.5, train=False):
         assert isinstance(input, Variable)
-
-        def np_fn(input_np, noise):
-            return input_np * noise
         
         if not train:
             noise = jnp.ones(input.data.shape)
         if p == 1:
             noise = jax.random.bernoulli(1, p, shape=input.data.shape)
+        def np_fn(input_np, noise):
+            return input_np * noise
         np_args = (input.data, noise)
         id = "Dropout"
         return np_fn, np_args, np_fn(*np_args),id
