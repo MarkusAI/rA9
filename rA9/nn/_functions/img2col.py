@@ -48,7 +48,7 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     cols_reshaped = onp.reshape(cols,(C * field_height * field_width, -1, N))
     cols_reshaped = onp.transpose(cols_reshaped, (2, 0, 1))
 
-    onp.add.at(x_padded, (slice(None), k, i, j), cols_reshaped)
+    x_padded = index_add(x_padded_jnp, index[:, k, i, j], cols_reshaped)
     if padding == 0:
         return x_padded
     return jnp.array(x_padded[:, :, padding:-padding, padding:-padding])
