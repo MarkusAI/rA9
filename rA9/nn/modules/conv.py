@@ -21,7 +21,7 @@ class Conv2d(Module):
         n = self.in_channels
         for k in self.kernel_size:
             n *= k # Need to solve this part as JAX function
-        stdv = self.reskey / jnp.sqrt(n)
+        stdv = jnp.sqrt(self.reskey/n)
 
         self.weight.uniform(-stdv, stdv)
 
