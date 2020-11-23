@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-import numpy as onp
+from jax.ops import index, index_add
 
 def get_im2col_indices(x_shape, field_height, field_width, padding=1, stride=1):
     # First figure out what the size of the output should be
@@ -42,11 +42,11 @@ def col2im_indices(cols, x_shape, field_height=3, field_width=3, padding=1,
     """ An implementation of col2im based on fancy indexing and np.add.at """
     N, C, H, W = x_shape
     H_padded, W_padded = H + 2 * padding, W + 2 * padding
-    x_padded = onp.zeros((N, C, H_padded, W_padded), dtype=cols.dtype)
+    x_padded = jnp.zeros((N, C, H_padded, W_padded), dtype=cols.dtype)
     k, i, j = get_im2col_indices(x_shape, field_height, field_width, padding, stride)
-    cols = onp.array(cols)
-    cols_reshaped = onp.reshape(cols,(C * field_height * field_width, -1, N))
-    cols_reshaped = onp.transpose(cols_reshaped, (2, 0, 1))
+    cols = jnp.array(cols)
+    cols_reshaped = jnp.reshape(cols,(C * field_height * field_width, -1, N))
+    cols_reshaped = jnp.transpose(cols_reshaped, (2, 0, 1))
 
     x_padded = index_add(x_padded_jnp, index[:, k, i, j], cols_reshaped)
     if padding == 0:
