@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="rA9",
-    version='0.1.8',
+    version='0.1.9',
     license='MIT',
     author="Dongyeong Kim, Jaeseok Lee, Junho Yeo",
     author_email="dongyeongkim33@gmail.com, jepetolee@gmail.com, hanaro0704@gmail.com",
