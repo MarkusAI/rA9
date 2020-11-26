@@ -13,7 +13,8 @@ class LIF(Function):
 
         def np_fn(input_np, v_current, gamma, tau_m, Vth, dt):
             return jnp.greater_equal(v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
-                                     Vth).astype('float32'), jnp.exp(-1/tau_m)*v_current, gamma+jnp.where(spike >= Vth, 1, 0)
+                                     Vth).astype('float32'), jnp.exp(-1/tau_m)*v_current, gamma+jnp.greater_equal(v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
+                                     Vth).astype('int32')
         
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
