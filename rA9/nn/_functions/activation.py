@@ -12,15 +12,10 @@ class LIF(Function):
         assert isinstance(input, Variable)
 
         def np_fn(input_np, v_current, gamma, tau_m, Vth, dt):
-            return jnp.greater_equal(v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
-                                     Vth).astype('float32'), \
-                   jnp.exp(-1 / tau_m) * jnp.less_equal(
-                       v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
-                       Vth).astype('float32') * (v_current +
-                               jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt)), \
-                   gamma + jnp.greater_equal(
-                       v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
-                       Vth).astype('int32')
+            dV = jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt)
+            return jnp.greater_equal(v_current + dV, Vth).astype('float32'), \
+                   jnp.exp(-1 / tau_m) * jnp.less_equal(v_current + dV, Vth).astype('float32') * jnp.where((v_current + dV)<0,0,v_current + dV), \
+                   gamma + jnp.greater_equal(v_current + dV, Vth).astype('int32')
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
             return jnp.multiply(grad_outputs, (1 / Vth * (
