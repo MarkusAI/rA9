@@ -1,5 +1,5 @@
 from jax import jit
-import jax.numpy as np
+import jax.numpy as jnp
 from rA9.autograd import Function
 from rA9.autograd import Variable
 
@@ -12,22 +12,19 @@ class LIF(Function):
         assert isinstance(input, Variable)
 
         def np_fn(input_np, v_current, gamma, tau_m, Vth, dt):
-            v_current = ((input_np - v_current) / tau_m) * dt
-            spike = np.greater_equal(v_current + np.multiply(np.divide(np.subtract(input_np, v_current), tau_m), dt),
-                                     Vth).astype('float32')
-
-            gamma += np.where(spike >= Vth, 1, 0)
-            return spike, v_current, gamma
+            return jnp.greater_equal(v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt),
+                                     Vth).astype('float32'), jnp.exp(-1/tau_m)*v_current, gamma+jnp.where(spike >= Vth, 1, 0)
+        
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
-            return np.multiply(grad_outputs, (1 / Vth * (
-                    1 + np.multiply(1 / gamma, np.sum(np.multiply(-1 / tau_m, np.exp(time - s_time_list)))))))
+            return jnp.multiply(grad_outputs, (1 / Vth * (
+                    1 + jnp.multiply(1 / gamma, jnp.sum(jnp.multiply(-1 / tau_m, jnp.exp(time - s_time_list)))))))
 
         np_args = (input.data, v_current.data, gamma.data, tau_m, Vth, dt)
         spike, v_current, gamma = jit(np_fn)(*np_args)
 
         spike_time = spike * time
-        s_time_list = np.concatenate((spike_time, s_time_list.data))
+        s_time_list = jnp.concatenate((spike_time, s_time_list.data))
         grad_np_args = (spike, time, tau_m, gamma, Vth)
 
         id = "LIF"
