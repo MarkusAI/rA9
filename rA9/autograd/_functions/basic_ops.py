@@ -35,7 +35,7 @@ class View(Function):
 
         id = "View"
         np_args = (a.data, sizes)
-        return np_fn, np_args, jit(np_fn)(*np_args),id
+        return np_fn, np_args, np_fn(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):
