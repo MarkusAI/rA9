@@ -1,5 +1,7 @@
 # rA9
-
+<p align="center">
+  <img src=https://user-images.githubusercontent.com/42883224/100475287-11acfd00-3126-11eb-8f17-ae8d230a999f.png>
+</p>
 
 Spiking Neural Network Library Based on [JAX](https://github.com/google/jax) and referencing codes from [bintorch](https://github.com/bingo619/bintorch)
 
