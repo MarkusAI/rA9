@@ -20,17 +20,12 @@ class Output(Module):
     def forward(self, input, time, activetime):
         if activetime == 0:
             self.v_current = Variable(jnp.zeros(shape=(1, self.out_features)))
-            out, v_current_ret = F.Output(input=input,
-                                          v_current=Output.v_current,
-                                          tau_m=self.tau_m, dt=self.dt,
-                                          time_step=time + self.time_step)
-            self.v_current = v_current_ret
-        else:
-            out, v_current_ret = F.Output(input=input,
-                                          v_current=Output.v_current,
-                                          tau_m=self.tau_m, dt=self.dt,
-                                          time_step=time + self.time_step)
-            self.v_current = v_current_ret
+
+        out, v_current_ret = F.Output(input=input,
+                                      v_current=self.v_current,
+                                      tau_m=self.tau_m, dt=self.dt,
+                                      time_step=time + self.time_step)
+        self.v_current = v_current_ret
 
         return out, time + self.dt * self.time_step
 
