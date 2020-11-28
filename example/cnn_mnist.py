@@ -65,8 +65,8 @@ for epoch in range(15):
 
         for t, q in enumerate(pe.Encoding(data)):
             data = Variable(q, requires_grad=True)
-
-        output, time = model(data, t)
+            output, time = model(data, t)
+            
         loss = F.Spikeloss(output, target, time_step=time)
         loss.backward()  # calc gradients
         optimizer.step()  # update gradients
