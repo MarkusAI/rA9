@@ -16,8 +16,8 @@ class LIF(Module):
         self.Vth = Vth
         self.dt = dt
 
-    def forward(self, input, time, activetime):
-        if activetime == 0:
+    def forward(self, input, time):
+        if time == 0:
             self.v_current = Variable(jnp.zeros(shape=input.data.shape))
             self.gamma = Variable(jnp.zeros(shape=input.data.shape))
             self.spike_time_list = Variable(jnp.zeros(shape=input.data.shape))
@@ -29,7 +29,7 @@ class LIF(Module):
         self.v_current = v_current
         self.gamma = gamma
 
-        return out, time + self.dt * self.time_step
+        return out
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
