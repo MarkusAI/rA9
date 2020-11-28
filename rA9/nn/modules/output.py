@@ -17,8 +17,8 @@ class Output(Module):
 
         self.reset_parameters()
 
-    def forward(self, input, time, activetime):
-        if activetime == 0:
+    def forward(self, input, time):
+        if time == 0:
             self.v_current = Variable(jnp.zeros(shape=(1, self.out_features)))
 
         out, v_current_ret = F.Output(input=input,
@@ -27,7 +27,7 @@ class Output(Module):
                                       time_step=time + self.time_step)
         self.v_current = v_current_ret
 
-        return out, time + self.dt * self.time_step
+        return out
 
     def reset_parameters(self):
         pass
