@@ -1,6 +1,7 @@
-import jax.numpy as jnp
 import rA9.nn as nn
-from rA9.optim import Adam
+import jax.numpy as jnp
+from rA9.optim import SGD
+import jax.random as random
 import rA9.nn.functional as F
 from rA9.autograd import Variable
 from rA9.nn.modules import Module
@@ -31,15 +32,15 @@ class SNN(Module):
         self.dr = nn.Dropout(p=0.25)
 
     def forward(self, x, time):
-        x, intime = self.active1(self.conv1(x), time, time); x = self.dr(x)
-        x, intime = self.active2(self.pool1(x), intime, time); x = self.dr(x)
-        x, intime = self.active3(self.conv2(x), intime, time); x = self.dr(x)
-        x, intime = self.active4(self.pool2(x), intime, time); x = self.dr(x)
-        x = x.view(-1, 320)
-        x, intime = self.active5(self.fc1(x), intime, time); x = self.dr(x)
-        x, intime = self.active6(self.fc2(x),intime,time); x = self.dr(x)
-        x, intime = self.active7(self.fc3(x), intime, time); x = self.dr(x)
-        return self.output(self.fc4(x), intime, time)
+        x, intime = self.active1(self.conv1(x), time); x = self.dr(x)
+        x, intime = self.active2(self.pool1(x), time); x = self.dr(x)
+        x, intime = self.active3(self.conv2(x), time); x = self.dr(x)
+        x, intime = self.active4(self.pool2(x), time); x = self.dr(x)
+        x = x.view(x.data.shape[0], -1)
+        x, intime = self.active5(self.fc1(x), time); x = self.dr(x)
+        x, intime = self.active6(self.fc2(x), time); x = self.dr(x)
+        x, intime = self.active7(self.fc3(x), time); x = self.dr(x)
+        return self.output(self.fc4(x), time)
 
 
 model = SNN()
@@ -62,10 +63,12 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-
-        for t, q in enumerate(pe.Encoding(data)):
-            data = Variable(q, requires_grad=True)
-            output, time = model(data, t)
+        for t in range(PeDurx):
+            rnum = random.uniform(key=random.PRNGKey(0), shape=data.shape)
+            uin = (jnp.abs(data) / 2 > rnum).astype('float32')
+            q = jnp.multiply(uin, jnp.sign(data))
+            output, time = model(Variable(q), t)
+            print(str(t))
             
         loss = F.Spikeloss(output, target, time_step=time)
         loss.backward()  # calc gradients
