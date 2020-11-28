@@ -1,5 +1,8 @@
 # rA9
-
+<p align="center">
+  <img src=https://user-images.githubusercontent.com/42883224/100475287-11acfd00-3126-11eb-8f17-ae8d230a999f.png>
+</p>
+<hr>
 
 Spiking Neural Network Library Based on [JAX](https://github.com/google/jax) and referencing codes from [bintorch](https://github.com/bingo619/bintorch)
 
@@ -33,4 +36,4 @@ and install rA9 as following:
 
 It also supports TPU in [google colab](https://colab.research.google.com/)
 
-Disclaimer: This project is in still progress.
+Disclaimer: This project is still in progress.

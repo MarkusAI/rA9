@@ -5,16 +5,17 @@ from rA9.nn.parameter import Parameter
 
 
 class Linear(Module):
-    def __init__(self, in_features, out_features):
+    def __init__(self, in_features, out_features, reskey=2.0):
         super(Linear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.weight = Parameter(jnp.zeros(shape=(out_features, in_features)))
+        self.reskey = reskey
         self.reset_parameters()
 
     def reset_parameters(self):
         size = self.weight.data.shape
-        stdv = jnp.divide(1.0,jnp.sqrt(size[1]))
+        stdv = jnp.sqrt(self.reskey/size[1])
         self.weight.uniform(-stdv, stdv)
 
     def forward(self, input):

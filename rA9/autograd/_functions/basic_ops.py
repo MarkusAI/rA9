@@ -1,4 +1,5 @@
-import jax.numpy as np
+from jax import jit
+import jax.numpy as jnp
 
 from ..function import Function
 
@@ -9,11 +10,11 @@ class Add(Function):
     @staticmethod
     def forward(ctx, a, b):
         def np_fn(a, b):
-            return np.add(a,b)
+            return jnp.add(a,b)
 
         id = "Add"
         np_args = (a.data, b.data)
-        return np_fn, np_args, np_fn(*np_args),id
+        return np_fn, np_args, jit(np_fn)(*np_args),id
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -21,7 +22,7 @@ class Add(Function):
 
 
 def sort_args(a, b):
-    return (a, b, True) if isinstance(a, np.ndarray) else (b, a, False)
+    return (a, b, True) if isinstance(a, jnp.ndarray) else (b, a, False)
 
 
 class View(Function):
@@ -30,7 +31,7 @@ class View(Function):
     @staticmethod
     def forward(ctx, a, sizes):
         def np_fn(a, sizes):
-            return np.reshape(a, sizes)
+            return jnp.reshape(a, sizes)
 
         id = "View"
         np_args = (a.data, sizes)

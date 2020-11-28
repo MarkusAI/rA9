@@ -6,7 +6,7 @@ from ..parameter import Parameter
 from .. import functional as F
 
 class Conv2d(Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0,reskey=2.0):
         super(Conv2d, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -14,13 +14,14 @@ class Conv2d(Module):
         self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size))
         self.stride = stride
         self.padding = padding
+        self.reskey = reskey
         self.reset_parameters()
 
     def reset_parameters(self):
         n = self.in_channels
         for k in self.kernel_size:
             n *= k # Need to solve this part as JAX function
-        stdv = 1. / jnp.sqrt(n)
+        stdv = jnp.sqrt(self.reskey/n)
 
         self.weight.uniform(-stdv, stdv)
 
