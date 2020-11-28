@@ -67,7 +67,7 @@ for epoch in range(15):
             rnum = random.uniform(key=random.PRNGKey(0), shape=data.shape)
             uin = (jnp.abs(data) / 2 > rnum).astype('float32')
             q = jnp.multiply(uin, jnp.sign(data))
-            output, time = model(Variable(q), t)
+            output, time = model(Variable(q), t))
             print(str(t))
             
         loss = F.Spikeloss(output, target, time_step=time)
