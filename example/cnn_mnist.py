@@ -5,7 +5,6 @@ import jax.random as random
 import rA9.nn.functional as F
 from rA9.autograd import Variable
 from rA9.nn.modules import Module
-from rA9.utils import PoissonEncoder
 from rA9.utils.data import DataLoader
 from rA9.datasets.mnist import MnistDataset, collate_fn
 
@@ -32,15 +31,21 @@ class SNN(Module):
         self.dr = nn.Dropout(p=0.25)
 
     def forward(self, x, time):
-        x, intime = self.active1(self.conv1(x), time); x = self.dr(x)
-        x, intime = self.active2(self.pool1(x), time); x = self.dr(x)
-        x, intime = self.active3(self.conv2(x), time); x = self.dr(x)
-        x, intime = self.active4(self.pool2(x), time); x = self.dr(x)
+      f = x.data
+      for i in range(time):
+        rnum = random.uniform(key=random.PRNGKey(0), shape=f.shape)
+        uin = (jnp.abs(f) / 2 > rnum).astype('float32')
+        uin = jnp.multiply(uin, jnp.sign(f))
+        x = self.active1(self.conv1(Variable(uin,requires_grad=True)), i); x = self.dr(x)
+        x = self.active2(self.pool1(x), i); x = self.dr(x)
+        x = self.active3(self.conv2(x), i); x = self.dr(x)
+        x = self.active4(self.pool2(x), i); x = self.dr(x)
         x = x.view(x.data.shape[0], -1)
-        x, intime = self.active5(self.fc1(x), time); x = self.dr(x)
-        x, intime = self.active6(self.fc2(x), time); x = self.dr(x)
-        x, intime = self.active7(self.fc3(x), time); x = self.dr(x)
-        return self.output(self.fc4(x), time)
+        x = self.active5(self.fc1(x), i); x = self.dr(x)
+        x = self.active6(self.fc2(x), i); x = self.dr(x)
+        x = self.active7(self.fc3(x), i); x = self.dr(x)
+        result = self.output(self.fc4(x), i)
+      return result 
 
 
 model = SNN()
@@ -48,8 +53,7 @@ model.train()
 
 PeDurx = 50
 batch_size = 50
-pe = PoissonEncoder(duration=PeDurx)
-optimizer = Adam(model.parameters(), lr=0.003)
+optimizer = SGD(model.parameters(), lr=0.003)
 
 train_loader = DataLoader(dataset=MnistDataset(training=True, flatten=False),
                           collate_fn=collate_fn, shuffle=True,
@@ -63,14 +67,9 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-        for t in range(PeDurx):
-            rnum = random.uniform(key=random.PRNGKey(0), shape=data.shape)
-            uin = (jnp.abs(data) / 2 > rnum).astype('float32')
-            q = jnp.multiply(uin, jnp.sign(data))
-            output, time = model(Variable(q), t))
-            print(str(t))
-            
-        loss = F.Spikeloss(output, target, time_step=time)
+        data = Variable(data)
+        output = model(data, PeDurx)
+        loss = F.Spikeloss(output, target, time_step= PeDurx)
         loss.backward()  # calc gradients
         optimizer.step()  # update gradients
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))
