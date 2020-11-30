@@ -1,4 +1,5 @@
 from jax import jit
+import random as rd
 from jax import random
 import jax.numpy as jnp
 
@@ -10,8 +11,7 @@ class Dropout(Function):
     @staticmethod
     def forward(ctx, input, p=0.5, train=False):
         assert isinstance(input, Variable)
-        _, subkey = random.PRNGKey(0)
-        noise = random.bernoulli(key=subkey, p, shape=input.data.shape)
+        noise = random.bernoulli(key=random.PRNGKey(rd.randint(-1000000000000000000, 1000000000000000000)), p, shape=input.data.shape)
         if not train:
             noise = jnp.ones(input.data.shape)
         if p == 1:
