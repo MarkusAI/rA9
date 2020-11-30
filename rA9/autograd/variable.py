@@ -1,4 +1,5 @@
 import rA9
+import random as rd
 import jax.numpy as jnp
 import jax.random as random
 
@@ -19,8 +20,7 @@ class Variable(object):
             self.grad = jnp.zeros(self.grad.shape)
 
     def uniform(self, low=None, high=None):
-        _, subkey = random.split(random.PRNGKey(0))
-        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=subkey)
+        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=random.PRNGKey(rd.randint(-1000000000000000000, 1000000000000000000)))
 
     def get_grad_accumulator(self):
         if self.grad_fn is not None:
