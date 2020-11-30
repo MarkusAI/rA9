@@ -19,8 +19,8 @@ class Variable(object):
             self.grad = jnp.zeros(self.grad.shape)
 
     def uniform(self, low=None, high=None):
-        key = random.PRNGKey(0)
-        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=key)
+        _, subkey = random.split(random.PRNGKey(0))
+        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=subkey)
 
     def get_grad_accumulator(self):
         if self.grad_fn is not None:
