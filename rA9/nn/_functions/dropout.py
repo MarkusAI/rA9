@@ -10,7 +10,8 @@ class Dropout(Function):
     @staticmethod
     def forward(ctx, input, p=0.5, train=False):
         assert isinstance(input, Variable)
-        noise = random.bernoulli(random.PRNGKey(0), p, shape=input.data.shape)
+        _, subkey = random.PRNGKey(0)
+        noise = random.bernoulli(key=subkey, p, shape=input.data.shape)
         if not train:
             noise = jnp.ones(input.data.shape)
         if p == 1:
