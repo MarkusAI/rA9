@@ -1,3 +1,4 @@
+import random as rd
 import rA9.nn as nn
 import jax.numpy as jnp
 from rA9.optim import SGD
@@ -31,12 +32,7 @@ class SNN(Module):
         self.dr = nn.Dropout(p=0.25)
 
     def forward(self, x, time):
-      f = x.data
-      for i in range(time):
-        rnum = random.uniform(key=random.PRNGKey(0), shape=f.shape)
-        uin = (jnp.abs(f) / 2 > rnum).astype('float32')
-        uin = jnp.multiply(uin, jnp.sign(f))
-        x = self.active1(self.conv1(Variable(uin,requires_grad=True)), i); x = self.dr(x)
+        x = self.active1(self.conv1(x), i); x = self.dr(x)
         x = self.active2(self.pool1(x), i); x = self.dr(x)
         x = self.active3(self.conv2(x), i); x = self.dr(x)
         x = self.active4(self.pool2(x), i); x = self.dr(x)
@@ -67,9 +63,10 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-        data = Variable(data)
-        output = model(data, PeDurx)
-        loss = F.Spikeloss(output, target, time_step= PeDurx)
+        for i in range(PeDurx):
+            data = Variable(random.bernoulli(key=random.PRNGKey(random.randint(-1000,1000),p=data))
+            output = model(data, i)
+            loss = F.Spikeloss(output, target, time_step= PeDurx); print(loss.data)
         loss.backward()  # calc gradients
         optimizer.step()  # update gradients
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))
