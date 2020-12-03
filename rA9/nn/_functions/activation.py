@@ -23,16 +23,7 @@ class LIF(Function):
                         ),
                         dt),
                     Vth).astype('float32'), \
-                jnp.exp(-1 / tau_m) * jnp.less_equal(
-                    v_current + jnp.multiply(
-                        jnp.divide(
-                            jnp.subtract(
-                                input_np, v_current
-                            ),
-                            tau_m
-                        ),
-                        dt),
-                    Vth).astype('float32') * jnp.where(
+                jnp.where(
                     (v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt)) < 0, 0,
                     v_current + jnp.multiply(jnp.divide(jnp.subtract(input_np, v_current), tau_m), dt)), \
                 gamma + jnp.greater_equal(
