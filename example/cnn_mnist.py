@@ -63,9 +63,9 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-        for i in range(PeDurx):
+        for j in range(PeDurx):
             data = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000,1000)),p=data))
-            output = model(data, i)
+            output = model(data, j)
             loss = F.Spikeloss(output, target, time_step= PeDurx); print(loss.data)
         loss.backward()  # calc gradients
         optimizer.step()  # update gradients
