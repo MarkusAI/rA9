@@ -1,3 +1,4 @@
+import seaborn
 import random as rd
 import rA9.nn as nn
 import jax.numpy as jnp
@@ -8,7 +9,6 @@ from rA9.autograd import Variable
 from rA9.nn.modules import Module
 from rA9.utils.data import DataLoader
 from rA9.datasets.mnist import MnistDataset, collate_fn
-
 
 class SNN(Module):
     def __init__(self):
@@ -29,25 +29,26 @@ class SNN(Module):
         self.active7 = nn.LIF()
         self.fc4 =nn.Linear(out_features=10, in_features=30)
         self.output = nn.Output(out_features=10)
-        self.dr = nn.Dropout(p=0.25)
 
     def forward(self, x, time):
-        x = self.active1(self.conv1(x), i); x = self.dr(x)
-        x = self.active2(self.pool1(x), i); x = self.dr(x)
-        x = self.active3(self.conv2(x), i); x = self.dr(x)
-        x = self.active4(self.pool2(x), i); x = self.dr(x)
-        x = x.view(x.data.shape[0], -1)
-        x = self.active5(self.fc1(x), i); x = self.dr(x)
-        x = self.active6(self.fc2(x), i); x = self.dr(x)
-        x = self.active7(self.fc3(x), i); x = self.dr(x)
-        result = self.output(self.fc4(x), i)
-      return result 
+        x = self.active1(self.conv1(x), time)
+        x = self.active2(self.pool1(x), time)
+        x = self.active3(self.conv2(x), time)
+        x = self.active4(self.pool2(x), time)
+        x = x.view(-1, 320)
+        x = self.active5(self.fc1(x), time)
+        x = self.active6(self.fc2(x), time)
+        x = self.active7(self.fc3(x), time)
+        return self.output(self.fc4(x), time), [self.active1.v_current.data, self.active2.v_current.data,
+                                             self.active3.v_current.data, self.active4.v_current.data,
+                                             self.active5.v_current.data, self.active6.v_current.data,
+                                             self.active7.v_current.data, self.output.v_current.data]
 
 
 model = SNN()
 model.train()
 
-PeDurx = 50
+PeDurx = 1
 batch_size = 50
 optimizer = SGD(model.parameters(), lr=0.003)
 
@@ -59,14 +60,21 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
                          collate_fn=collate_fn, shuffle=False,
                          batch_size=batch_size)
 
-
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
         for j in range(PeDurx):
-            data = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000,1000)),p=data))
-            output = model(data, j)
-            loss = F.Spikeloss(output, target, time_step= PeDurx); print(loss.data)
-        loss.backward()  # calc gradients
+            f = data
+            pdata = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000, 1000)), p=f))
+            output, v_current = model(pdata, j)
+            loss = F.Spikeloss(output, target, time_step=PeDurx)
+            loss.backward()  # calc gradients
+            for k, v in enumerate(v_current):
+                if k < 4:
+                    seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
+                else:
+                    seaborn.heatmap(v, cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
+
+
         optimizer.step()  # update gradients
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))
