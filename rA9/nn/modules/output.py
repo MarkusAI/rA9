@@ -27,7 +27,7 @@ class Output(Module):
                                       time_step=time + self.time_step)
         self.v_current = v_current_ret
 
-        return out
+        return self.v_current
 
     def reset_parameters(self):
         pass
