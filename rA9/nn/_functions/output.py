@@ -13,7 +13,7 @@ class Output(Function):
         assert isinstance(input, Variable)
 
         def np_fn(input_np, v_current, time_step, dt, tau_m):
-            return jnp.divide(input_np+v_current*jnp.exp(-1/tau_m)), time_step)
+            return input_np+v_current*jnp.exp(-1/tau_m)
 
         def grad_fn(grad_outputs, input, s_time_list, time, tau_m, gamma, Vth):
             return (jnp.divide(grad_outputs,time), jnp.matmul(input.T,jnp.divide(grad_outputs,time)))
