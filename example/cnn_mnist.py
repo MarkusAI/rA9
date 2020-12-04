@@ -65,7 +65,7 @@ for epoch in range(15):
         target = Variable(target)
         for j in range(PeDurx):
             f = data
-            pdata = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000, 1000)), p=f))
+            pdata = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000, 1000)), p=f),requires_grad=True)
             output, v_current = model(pdata, j)
             loss = F.Spikeloss(output, target, time_step=PeDurx)
             loss.backward()  # calc gradients
