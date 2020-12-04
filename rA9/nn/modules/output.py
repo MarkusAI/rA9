@@ -21,7 +21,7 @@ class Output(Module):
         if time == 0:
             self.v_current = Variable(jnp.zeros(shape=(1, self.out_features)))
 
-        out, v_current_ret = F.Output(input=input,
+        v_current_ret = F.Output(input=input,
                                       v_current=self.v_current,
                                       tau_m=self.tau_m, dt=self.dt,
                                       time_step=time + self.time_step)
