@@ -8,6 +8,7 @@ import rA9.nn.functional as F
 from rA9.autograd import Variable
 from rA9.nn.modules import Module
 from rA9.utils.data import DataLoader
+from rA9.utils.encoding import PoissonEncoder
 from rA9.datasets.mnist import MnistDataset, collate_fn
 
 class SNN(Module):
@@ -48,10 +49,10 @@ class SNN(Module):
 model = SNN()
 model.train()
 
-PeDurx = 1
-batch_size = 50
+PeDurx = 45
+batch_size = 64
 optimizer = SGD(model.parameters(), lr=0.003)
-
+encoder = PoissonEncoder(duration=PeDurx)
 train_loader = DataLoader(dataset=MnistDataset(training=True, flatten=False),
                           collate_fn=collate_fn, shuffle=True,
                           batch_size=batch_size)
@@ -63,18 +64,16 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
-        for j in range(PeDurx):
-            f = data
-            pdata = Variable(random.bernoulli(key=random.PRNGKey(rd.randint(-1000, 1000)), p=f),requires_grad=True)
+        for j, q in enumerate(encoder.Encoding(data)):
+            pdata = Variable(q, requires_grad=True)
             output, v_current = model(pdata, j)
-            loss = F.Spikeloss(output, target, time_step=PeDurx)
-            loss.backward()  # calc gradients
             for k, v in enumerate(v_current):
                 if k < 4:
                     seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
                 else:
                     seaborn.heatmap(v, cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
 
-
+        loss = F.Spikeloss(output, target, time_step=PeDurx)
+        loss.backward()  # calc gradients
         optimizer.step()  # update gradients
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))
