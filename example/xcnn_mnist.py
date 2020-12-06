@@ -10,6 +10,7 @@ from rA9.nn.modules import Module
 from rA9.utils.data import DataLoader
 from rA9.utils.encoding import PoissonEncoder
 from rA9.datasets.mnist import MnistDataset, collate_fn
+import os
 
 class SNN(Module):
     def __init__(self):
@@ -68,6 +69,7 @@ for epoch in range(15):
             pdata = Variable(q, requires_grad=True)
             output, v_current = model(pdata, j)
             for k, v in enumerate(v_current):
+                os.makedirs(f"image/{str(k + 1)}", exist_ok=True)
                 if k < 4:
                     seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
                 else:
