@@ -15,9 +15,7 @@ class LIF(Function):
             spike = jnp.greater_equal(input_np + v_current, Vth).astype('float32')
             v_current = input_np + v_current - spike
 
-            return spike, jnp.where(
-                v_current < 0, 0, jnp.multiply(jnp.exp(-1 / tau_m), v_current)
-            ), gamma + spike.astype('int32')
+            return spike, jnp.multiply(jnp.exp(-1 / tau_m), v_current), gamma + spike.astype('int32')
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
             return jnp.multiply(grad_outputs, (1 / Vth * (
