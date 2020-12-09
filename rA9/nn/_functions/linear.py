@@ -18,7 +18,7 @@ class Linear(Function):
 
         np_args = (input.data, weight.data.T)
         id = "Linear"
-        return np_fn, np_args, np_fn(*np_args), id
+        return np_fn, np_args, jit(np_fn)(*np_args), id
 
 
     @staticmethod

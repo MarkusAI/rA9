@@ -3,6 +3,20 @@ import jax.random as random
 from jax.ops import index, index_update, index_add
 
 
+class UniformEncoder(object):
+    def __init__(self, duration, mode=1, key=0):
+        super().__init__()
+        self.mode = mode
+        self.duration = duration
+        self.key = random.PRNGKey(key)
+
+    def Encoding(self, intensities):
+        rnum = random.uniform(key=self.key, shape=(self.duration, *intensities.shape))
+        uin = (jnp.abs(intensities)/self.mode > rnum).astype('float32')
+        return jnp.multiply(uin, jnp.sign(intensities))
+
+
+
 class PoissonEncoder(object):
     def __init__(self, duration, dt=1, key=0):
         super().__init__()
@@ -41,7 +55,7 @@ class PoissonEncoder(object):
         # Calculate spike times by cumulatively summing over time dimension.
 
         times_p = jnp.cumsum(intervals, dtype='float32', axis=0)
-        times = index_update(times_p, times_p >= time+1, 0).astype(bool)
+        times = index_update(times_p, times_p >= time + 1, 0).astype(bool)
 
         del times_p
 
