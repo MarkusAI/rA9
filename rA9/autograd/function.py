@@ -27,7 +27,7 @@ class BackwardFunction(object):
 
         id = ctx.id
         if id == "Spikeloss":
-            grads = (np_fn(grad_outputs,*np_args), np_args[1].shape[1:])
+            grads = (np_args[0] - jnp.tile(jnp.expand_dims(np_args[1], axis=1), np_args[1].shape[1:]))
 
         elif id == "output":
 
