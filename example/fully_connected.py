@@ -7,7 +7,7 @@ from rA9.nn.modules import Module
 from rA9.utils import PoissonEncoder
 from rA9.utils.data import DataLoader
 from rA9.datasets.mnist import MnistDataset, collate_fn
-import  jax.numpy as jnp
+
 
 
 class SNN(Module):
