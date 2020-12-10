@@ -22,7 +22,7 @@ class Output(Function):
         np_args = (input.data, v_current.data, time_step, dt, tau_m)
         out, v_current = jit(np_fn)(*np_args)
 
-        grad_np_args = (input.data, time_step, tau_m, 0, 0)
+        grad_np_args = (input.data, out, time_step, tau_m, 0)
 
         id = "output"
         return grad_fn, grad_np_args, out, v_current, id
