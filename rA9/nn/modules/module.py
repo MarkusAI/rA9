@@ -50,8 +50,6 @@ class Module(object):
 
         for param in self._parameters.values():
             if param is not None:
-                # Variables stored in modules are graph leaves, and we don't
-                # want to create copy nodes, so we have to unpack the data.
                 param.data = fn(param.data)
                 if param._grad is not None:
                     param._grad.data = fn(param._grad.data)

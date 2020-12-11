@@ -11,8 +11,8 @@ class Dropout(Module):
                              "but got {}".format(p))
         self.p = p
 
-    def forward(self, input, time):
-        return F.dropout(input, self.p, self.training), time
+    def forward(self, input):
+        return F.dropout(input, self.p, self.training)
 
     def __repr__(self):
         inplace_str = ', inplace' if self.inplace else ''

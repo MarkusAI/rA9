@@ -1,16 +1,16 @@
 import rA9
+import random as rd
 import jax.numpy as jnp
 import jax.random as random
 
 
 class Variable(object):
 
-    def __init__(self, data, gamma=None,requires_grad=False, grad_fn=None):
+    def __init__(self, data, id=None, requires_grad=False, grad_fn=None):
         self.data = data
         self.grad = None
         self.grad_fn = grad_fn
-        self.gamma = gamma
-
+        self.id = id
 
         self.requires_grad = requires_grad
 
@@ -20,15 +20,14 @@ class Variable(object):
             self.grad = jnp.zeros(self.grad.shape)
 
     def uniform(self, low=None, high=None):
-        key = random.PRNGKey(0)
-        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=key)
+        self.data = random.uniform(minval=low, maxval=high, shape=self.data.shape, key=random.PRNGKey(rd.randint(-1000000000000000000, 1000000000000000000)))
 
     def get_grad_accumulator(self):
         if self.grad_fn is not None:
             raise RuntimeError("get_grad_accumulator() should be only called on leaf Variables")
 
         if len(jnp.argwhere(self.gamma == 0)) != 0 and self.requires_grad:
-            return None
+            return jnp.zeros(shape=self.gamma)
 
     def backward(self):
         if self.size > 1:
@@ -37,15 +36,18 @@ class Variable(object):
         rA9.autograd.backward(self)
 
     def _add(self, other):
+
         if isinstance(other, Variable):
             return Add.apply(self, other)
         else:
             raise NotImplementedError("")
 
     def add(self, other):
+
         return self._add(other)
 
     def add_(self, other):
+
         return self._add(other)
 
     def view(self, *sizes):
@@ -72,4 +74,3 @@ class Variable(object):
 
 
 from ._functions import *
-

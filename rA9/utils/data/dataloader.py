@@ -1,16 +1,11 @@
-import rA9
-from .sampler import SequentialSampler, RandomSampler, BatchSampler
-import collections
 import sys
+import queue
 import traceback
 import threading
-if sys.version_info[0] == 2:
-    import Queue as queue
-    string_classes = basestring
-else:
-    import queue
-    string_classes = (str, bytes)
+from .sampler import SequentialSampler, RandomSampler, BatchSampler
 
+
+string_classes = (str, bytes)
 
 _use_shared_memory = False
 """Whether to use shared memory in default_collate"""
@@ -65,8 +60,6 @@ def _pin_memory_loop(in_queue, out_queue, done_event):
 
 
 def default_collate(batch):
-
-
     return batch
 
 
@@ -80,9 +73,7 @@ class DataLoaderIter(object):
         self.num_workers = loader.num_workers
         self.pin_memory = loader.pin_memory
         self.done_event = threading.Event()
-
         self.sample_iter = iter(self.batch_sampler)
-
 
     def __len__(self):
         return len(self.batch_sampler)
@@ -90,9 +81,8 @@ class DataLoaderIter(object):
     def __next__(self):
         if self.num_workers == 0:  # same-process loading
             indices = next(self.sample_iter)  # may raise StopIteration
-            batch = self.collate_fn([self.dataset[i] for i in indices])
-
-            return batch
+            return self.collate_fn([self.dataset[i] for i in indices])
+        
 
         # check if the next sample has already been generated
         if self.rcvd_idx in self.reorder_dict:
@@ -113,7 +103,7 @@ class DataLoaderIter(object):
                 continue
             return self._process_next_batch(batch)
 
-    next = __next__  #
+    next = __next__  # Python 2 compatibility
 
     def __iter__(self):
         return self
@@ -155,6 +145,31 @@ class DataLoaderIter(object):
 
 
 class DataLoader(object):
+    """
+    Data loader. Combines a dataset and a sampler, and provides
+    single- or multi-process iterators over the dataset.
+    Arguments:
+        dataset (Dataset): dataset from which to load the data.
+        batch_size (int, optional): how many samples per batch to load
+            (default: 1).
+        shuffle (bool, optional): set to ``True`` to have the data reshuffled
+            at every epoch (default: False).
+        sampler (Sampler, optional): defines the strategy to draw samples from
+            the dataset. If specified, ``shuffle`` must be False.
+        batch_sampler (Sampler, optional): like sampler, but returns a batch of
+            indices at a time. Mutually exclusive with batch_size, shuffle,
+            sampler, and drop_last.
+        num_workers (int, optional): how many subprocesses to use for data
+            loading. 0 means that the data will be loaded in the main process
+            (default: 0)
+        collate_fn (callable, optional): merges a list of samples to form a mini-batch.
+        pin_memory (bool, optional): If ``True``, the data loader will copy tensors
+            into CUDA pinned memory before returning them.
+        drop_last (bool, optional): set to ``True`` to drop the last incomplete batch,
+            if the dataset size is not divisible by the batch size. If False and
+            the size of dataset is not divisible by the batch size, then the last batch
+            will be smaller. (default: False)
+    """
 
     def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None, batch_sampler=None,
                  num_workers=0, collate_fn=default_collate, pin_memory=False, drop_last=False):

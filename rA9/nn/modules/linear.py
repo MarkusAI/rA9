@@ -2,55 +2,28 @@ import jax.numpy as jnp
 from .module import Module
 from .. import functional as F
 from rA9.nn.parameter import Parameter
-from rA9.autograd.variable import Variable
-from collections import OrderedDict
+
 
 class Linear(Module):
-    def __init__(self, in_features, out_features, tau_m=0.1, Vth=1, dt=1):
+    def __init__(self, in_features, out_features, reskey=2.0):
         super(Linear, self).__init__()
         self.in_features = in_features
         self.out_features = out_features
         self.weight = Parameter(jnp.zeros(shape=(out_features, in_features)))
-
-        Linear.v_current = None
-        Linear.gamma = None
-        Linear.spike_list = None
-        self.time_step = 1
-        self.tau_m = tau_m
-        self.Vth = Vth
-        self.dt = dt
+        self.reskey = reskey
         self.reset_parameters()
 
     def reset_parameters(self):
         size = self.weight.data.shape
-        stdv = 1. / jnp.sqrt(size[1])
+        stdv = jnp.sqrt(self.reskey/size[1])
         self.weight.uniform(-stdv, stdv)
 
-    def forward(self, input, time,spikel):
-        # print(self.weight.data)
-
-        if Linear.gamma is None:
-            Linear.gamma = Variable(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
-        if Linear.v_current is None:
-            Linear.v_current = Variable(jnp.zeros(shape=(self.out_features, input.data.shape[0])))
-        if Linear.spike_list is None:
-            Linear.spike_list = jnp.zeros(shape=(self.out_features, input.data.shape[0]))
-        out = F.linear(input=input, time_step=time, weights=self.weight,
-                       v_current=Linear.v_current, gamma=Linear.gamma,
-                       tau_m=self.tau_m, Vth=self.Vth, dt=self.dt,
-                       spike_list=Linear.spike_list)
-
-        Linear.gamma = None
-        Linear.v_current = None
-        Linear.spike_list = None
-        if spikel is None:
-            spikel = OrderedDict()
-            spikel.update({time:out})
-        else:
-            spikel.update({time:out})
-        return out, time + self.dt * self.time_step,spikel
+    def forward(self, input):
+        out = F.linear(input=input, weights=self.weight)
+        return out
 
     def __repr__(self):
         return self.__class__.__name__ + ' (' \
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
+
