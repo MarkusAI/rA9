@@ -19,7 +19,7 @@ class LIF(Function):
 
         def grad_fn(grad_outputs, s_time_list, time, tau_m, gamma, Vth):
             return jnp.multiply(grad_outputs, (1 / Vth * (
-                    1 + jnp.multiply(1 / gamma, jnp.sum(jnp.multiply(-1 / tau_m, jnp.exp(time - s_time_list)))))))
+                    1 + jnp.multiply(1 / gamma, jnp.sum(jnp.multiply(-1 / tau_m, jnp.exp((-1 / tau_m)*(time - s_time_list))))))))
 
         np_args = (input.data, v_current.data, gamma.data, tau_m, Vth, dt)
         spike, v_current, gamma = jit(np_fn)(*np_args)
