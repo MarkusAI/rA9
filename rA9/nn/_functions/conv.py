@@ -48,7 +48,7 @@ def conv_forward(X, W, stride=1, padding=0):
     return out, X_col
 
 
-def conv_backward(X, spike, W, X_col, stride=1, padding=0):
+def conv_backward(X, gamma, W, X_col, stride=1, padding=0):
 
     n_filter, v, h_filter, w_filter = W.shape
     n_x, d_x, h_x, w_x = X.shape
@@ -59,10 +59,14 @@ def conv_backward(X, spike, W, X_col, stride=1, padding=0):
 
     dout_reshaped = jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1)
 
-    wout_spike = jnp.transpose(spike, (1, 2, 3, 0)).reshape(n_filter, -1)
+    wout_gamma = jnp.transpose(gamma, (1, 2, 3, 0)).reshape(n_filter, -1)
+
     W_col = W.reshape(n_filter, -1)
     dx_col = jnp.matmul(W_col.T, dout_reshaped)
-    dW = jnp.matmul(wout_spike, X_col.T)
+
+    gamma_d = jnp.matmul(wout_gamma.T,W_col)
+
+    dW = jnp.matmul(dout_reshaped, gamma_d)
     dW = dW.reshape(W.shape)
 
     newshape = (n_x, v, h_out, w_out)
