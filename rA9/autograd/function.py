@@ -20,9 +20,7 @@ class BackwardFunction(object):
         return self.backward(self, *args)
 
     @staticmethod
-
-    def backward(ctx, grad_outputs,spike):
-
+    def backward(ctx, grad_outputs, gamma):
         np_fn = ctx.np_fn
 
         np_args = ctx.np_args
@@ -34,29 +32,27 @@ class BackwardFunction(object):
         elif id == "output":
 
             grads = np_fn(grad_outputs, *np_args)
-            spike = np_args[0]
+            gamma = grads[0]
+
 
         elif id == "LIF":
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
-
             grads = jnp.nan_to_num(grads, copy=False)
-            spike = np_args[3]
+            gamma = np_args[3]
 
         elif id == "Linear":
-            weight = jnp.transpose(jnp.array(np_args[1]))
+            weight = jnp.transpose(np_args[1])
             grad = jnp.matmul(grad_outputs, weight)
 
-
-            weights = jnp.transpose(jnp.matmul(np_args[0].T,spike))
+            gamma_d = jnp.matmul(gamma,weight)
+            weights = jnp.transpose(jnp.matmul(gamma_d.T, grad_outputs))
 
             grads = (grad, weights)
         else:
             if (len(np_args[0].shape)) == 4:
                 if len(np_args) >= 3:
-
-                    grads = np_fn(grad_outputs,spike, *np_args)
-
+                    grads = np_fn(grad_outputs, gamma, *np_args)
                 else:
                     shape = (grad_outputs.shape[0], np_args[0].shape[1], np_args[0].shape[2], np_args[0].shape[3])
                     grad_outputs = grad_outputs.reshape(shape)
@@ -66,8 +62,7 @@ class BackwardFunction(object):
             else:
                 grads = grad_outputs
 
-        return grads, spike
-
+        return grads, gamma
 
 
 class FunctionMeta(type):
@@ -132,15 +127,12 @@ class Function(with_metaclass(FunctionMeta)):
     @classmethod
     def apply(cls, *args):
         if getattr(cls(), 'id') == 'output':
-
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
             cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current)
-     
-   
         elif getattr(cls(), 'id') == 'LIF':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
@@ -148,7 +140,6 @@ class Function(with_metaclass(FunctionMeta)):
             np_fn, np_args, output, v_current, gamma, spike_time_list, id = cls.forward(grad_fn, *args)
 
             cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
-
 
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current), Variable(data=gamma), Variable(data=spike_time_list)
