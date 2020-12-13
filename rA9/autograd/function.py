@@ -44,10 +44,8 @@ class BackwardFunction(object):
         elif id == "Linear":
             weight = jnp.transpose(np_args[1])
             grad = jnp.matmul(grad_outputs, weight)
-
             gamma_d = jnp.matmul(gamma,weight)
             weights = jnp.transpose(jnp.matmul(gamma_d.T, grad_outputs))
-
             grads = (grad, weights)
         else:
             if (len(np_args[0].shape)) == 4:
