@@ -74,8 +74,9 @@ for epoch in range(15):
                     seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
                 else:
                     seaborn.heatmap(v, cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
-            optimizer.zero_grad()
-            loss = F.Spikeloss(output, target, time_step=PeDurx)
-            loss.backward()  # calc gradients
-            optimizer.step()  # update gradients
+        optimizer.zero_grad()
+        loss = F.Spikeloss(output, target, time_step=PeDurx)
+        loss.backward()  # calc gradients
+        optimizer.step()  # update gradients
+
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))
