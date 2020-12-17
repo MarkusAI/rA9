@@ -17,20 +17,16 @@ class LIF(Module):
         self.dt = dt
 
     def forward(self, input, time):
-        if time == 0:
-
-
+        if time == 1:
             self.spike_time_list = None
             self.v_current = None
             self.gamma = None
-
-
             self.v_current = Variable(jnp.zeros(shape=input.data.shape))
             self.gamma = Variable(jnp.zeros(shape=input.data.shape))
             self.spike_time_list = Variable(jnp.zeros(shape=input.data.shape))
-
+            
         out, v_current, gamma, spike_time_list = F.LIF(input, self.v_current, self.tau_m, self.Vth, self.dt,
-                                                       self.spike_time_list, time + 1,
+                                                       self.spike_time_list, time+1,
                                                        self.gamma)
         self.spike_time_list = spike_time_list
         self.v_current = v_current

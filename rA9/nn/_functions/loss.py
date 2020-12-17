@@ -14,11 +14,14 @@ class Spikeloss(Function):
 
         def np_fn(input_np, target_np, time_step):
             return jnp.sum((input_np - jnp.eye(input_np.shape[1])[target_np]) ** 2) / 2
+        
+        def grad_fn(input_np, target_np, time_step):
+            return jnp.divide(input_np - jnp.eye(input_np.shape[1])[target_np],time_step)
 
         np_args = (input.data, target.data, time_step)
         id = "Spikeloss"
 
-        return np_fn, np_args, jit(np_fn)(*np_args), id
+        return grad_fn, np_args, jit(np_fn)(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):

@@ -1,5 +1,6 @@
 from jax import jit
 from .img2col import *
+from jax.lax import conv_general_dilated_patches
 from rA9.autograd import Function
 from rA9.autograd import Variable
 
@@ -36,7 +37,6 @@ def conv_forward(X, W, stride=1, padding=0):
     w_out = (w_x - w_filter + 2 * padding) // stride + 1
 
     h_out, w_out = int(h_out), int(w_out)
-
     X_col = im2col_indices(X, h_filter, w_filter, padding=padding, stride=stride)
 
     W_col = W.reshape(n_filters, -1)
@@ -48,8 +48,7 @@ def conv_forward(X, W, stride=1, padding=0):
     return out, X_col
 
 
-def conv_backward(X, spike, W, X_col, stride=1, padding=0):
-
+def conv_backward(X, W, X_col, stride=1, padding=0):
     n_filter, v, h_filter, w_filter = W.shape
     n_x, d_x, h_x, w_x = X.shape
     h_out = (h_x - 1) * stride + h_filter - 2 * padding
@@ -59,11 +58,10 @@ def conv_backward(X, spike, W, X_col, stride=1, padding=0):
 
     dout_reshaped = jnp.transpose(X, (1, 2, 3, 0)).reshape(n_filter, -1)
 
-    wout_spike = jnp.transpose(spike, (1, 2, 3, 0)).reshape(n_filter, -1)
     W_col = W.reshape(n_filter, -1)
     dx_col = jnp.matmul(W_col.T, dout_reshaped)
-    dW = jnp.matmul(wout_spike, X_col.T)
-    dW = dW.reshape(W.shape)
+
+    dW = jnp.matmul(dout_reshaped.T, W_col)
 
     newshape = (n_x, v, h_out, w_out)
 

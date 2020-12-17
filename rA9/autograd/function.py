@@ -20,45 +20,43 @@ class BackwardFunction(object):
         return self.backward(self, *args)
 
     @staticmethod
-    def backward(ctx, grad_outputs,spike):
+    def backward(ctx, grad_outputs):
         np_fn = ctx.np_fn
-
+        gamma = ctx.gamma
         np_args = ctx.np_args
 
         id = ctx.id
         if id == "Spikeloss":
-            grads = (np_fn(grad_outputs,*np_args), np_args[1].shape[1:])
+            grads = np_fn(*np_args)
 
         elif id == "output":
 
-            grads = np_fn(grad_outputs, *np_args)
-            spike = np_args[0]
+            grads = grad_outputs
+            gamma = grads
 
         elif id == "LIF":
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
-            grads = jnp.nan_to_num(grads,copy=False)
-            spike = np_args[0]
-        elif id == "Linear":
-            weight = jnp.transpose(jnp.array(np_args[1]))
-            grad = jnp.matmul(grad_outputs, weight)
+            grads = jnp.nan_to_num(grads, copy=False)
 
-            weights = jnp.transpose(jnp.matmul(np_args[0].T,spike))
-            grads = (grad, weights)
+        elif id == "Linear":
+
+            grads = np_fn(grad_outputs,np_args)
+
         else:
             if (len(np_args[0].shape)) == 4:
                 if len(np_args) >= 3:
-                    grads = np_fn(grad_outputs,spike, *np_args)
+                    grads = np_fn(grad_outputs, *np_args)
+
                 else:
                     shape = (grad_outputs.shape[0], np_args[0].shape[1], np_args[0].shape[2], np_args[0].shape[3])
                     grad_outputs = grad_outputs.reshape(shape)
-
                     grads = grad_outputs
 
             else:
                 grads = grad_outputs
 
-        return grads,spike
+        return grads, gamma
 
 
 class FunctionMeta(type):
@@ -93,14 +91,14 @@ class AccumulateGrad():
 class Function(with_metaclass(FunctionMeta)):
 
     @staticmethod
-    def setup_grad_fn(grad_fn, np_fn, spike, np_args, id, *args):
+    def setup_grad_fn(grad_fn, np_fn, gamma, np_args, id, *args):
         grad_fn.saved_variables = ()
         grad_fn.next_functions = ()
         grad_fn.needs_input_grad = ()
         grad_fn.np_fn = np_fn
         grad_fn.args = args
         grad_fn.np_args = np_args
-        grad_fn.spike = spike
+        grad_fn.gamma = gamma
         grad_fn.id = id
 
         for arg in args:
@@ -126,7 +124,7 @@ class Function(with_metaclass(FunctionMeta)):
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
-            cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, None, np_args, id, *args)
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current)
         elif getattr(cls(), 'id') == 'LIF':
@@ -135,7 +133,7 @@ class Function(with_metaclass(FunctionMeta)):
 
             np_fn, np_args, output, v_current, gamma, spike_time_list, id = cls.forward(grad_fn, *args)
 
-            cls.setup_grad_fn(grad_fn, np_fn, output, np_args, id, *args)
+            cls.setup_grad_fn(grad_fn, np_fn, gamma, np_args, id, *args)
 
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current), Variable(data=gamma), Variable(data=spike_time_list)
