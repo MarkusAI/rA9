@@ -50,7 +50,7 @@ class SNN(Module):
 model = SNN()
 model.train()
 
-PeDurx = 45
+PeDurx = 30
 batch_size = 64
 optimizer = SGD(model.parameters(), lr=0.003)
 encoder = PoissonEncoder(duration=PeDurx)
@@ -68,17 +68,17 @@ for epoch in range(15):
         optimizer.zero_grad()
         for j, q in enumerate(encoder.Encoding(data)):
             pdata = Variable(q, requires_grad=True)
-            output, v_current = model(pdata, j)
+            output, v_current = model(pdata, j+1)
             for k, v in enumerate(v_current):
                 os.makedirs(f"image/{str(k + 1)}", exist_ok=True)
                 if k < 4:
                     seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
                 else:
                     seaborn.heatmap(v, cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
-
         optimizer.zero_grad()
         loss = F.Spikeloss(output, target, time_step=PeDurx)
         loss.backward()  # calc gradients
         optimizer.step()  # update gradients
+
 
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))

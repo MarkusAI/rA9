@@ -41,12 +41,29 @@ def excute(fn, grad_in=None):
                         gamma = linearpops()
                         grad_in = jnp.matmul(gamma.T, grad_in)
 
+                grad_in = jnp.where(grad_in == jnp.inf, 0, grad_in)
+                grad_in = jnp.nan_to_num(grad_in, copy=False)
+                if len(grad_in.shape) != 4:
+                    if len(fn.variable.grad.shape) == 4:
+                        gamma = gammapops(grad_in, fn.variable.data.shape[0])
+
+                        grad_in = jnp.matmul(gamma, grad_in)
+                        grad_in = grad_in.reshape(fn.variable.grad.shape)
+                    else:
+
+                        gamma = linearpops()
+
+                        grad_in = jnp.matmul(gamma.T, grad_in)
+
+                grad_in = jnp.where(grad_in == jnp.inf, 0, grad_in)
+                grad_in = jnp.nan_to_num(grad_in, copy=False)
                 fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
 
             return
         grad_outs, gamma = fn.apply(grad_in)
         if gamma is not None:
             gamma_stack.append(gamma)
+
         if type(grad_outs) is not tuple:
             grad_outs = (grad_outs,)
 

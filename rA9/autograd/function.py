@@ -31,8 +31,10 @@ class BackwardFunction(object):
 
         elif id == "output":
 
-            grads = np_fn(grad_outputs, *np_args)
-            gamma = grads[0]
+            grads = grad_outputs
+            gamma = grads
+
+
 
 
         elif id == "LIF":
@@ -41,11 +43,10 @@ class BackwardFunction(object):
             grads = jnp.nan_to_num(grads, copy=False)
 
         elif id == "Linear":
-            weight = jnp.transpose(np_args[1])
-            grad = jnp.matmul(grad_outputs, weight)
 
-            weights = jnp.matmul(grad_outputs,weight)
-            grads = (grad, weights)
+
+            grads = np_fn(grad_outputs,np_args)
+
 
         else:
             if (len(np_args[0].shape)) == 4:

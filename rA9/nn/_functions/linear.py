@@ -17,8 +17,13 @@ class Linear(Function):
             return out
         np_args = (input.data, weight.data.T)
         id = "Linear"
-        return np_fn, np_args, jit(np_fn)(*np_args), id
 
+        def grad_fn(grad_outputs, weight):
+            grad = jnp.matmul(grad_outputs, weight)
+            weights = jnp.matmul(grad_outputs, weight)
+            return (grad, weights)
+        grad_args = (weight.data)
+        return grad_fn, grad_args, jit(np_fn)(*np_args), id
 
     @staticmethod
     def backward(ctx, grad_outputs):

@@ -1,5 +1,6 @@
 from jax import jit
 from .img2col import *
+from jax.lax import conv_general_dilated_patches
 from rA9.autograd import Function
 from rA9.autograd import Variable
 
@@ -36,7 +37,6 @@ def conv_forward(X, W, stride=1, padding=0):
     w_out = (w_x - w_filter + 2 * padding) // stride + 1
 
     h_out, w_out = int(h_out), int(w_out)
-
     X_col = im2col_indices(X, h_filter, w_filter, padding=padding, stride=stride)
 
     W_col = W.reshape(n_filters, -1)
