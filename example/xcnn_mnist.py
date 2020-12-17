@@ -65,6 +65,7 @@ test_loader = DataLoader(dataset=MnistDataset(training=False, flatten=False),
 for epoch in range(15):
     for i, (data, target) in enumerate(train_loader):
         target = Variable(target)
+        optimizer.zero_grad()
         for j, q in enumerate(encoder.Encoding(data)):
             pdata = Variable(q, requires_grad=True)
             output, v_current = model(pdata, j+1)
@@ -74,9 +75,10 @@ for epoch in range(15):
                     seaborn.heatmap(v[0][0], cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
                 else:
                     seaborn.heatmap(v, cbar=False).figure.savefig("image/" + str(k + 1) + "/" + str(j) + ".png")
-            optimizer.zero_grad()
-            loss = F.Spikeloss(output, target, time_step=PeDurx)
-            loss.backward()  # calc gradients
-            optimizer.step()  # update gradients
+        optimizer.zero_grad()
+        loss = F.Spikeloss(output, target, time_step=PeDurx)
+        loss.backward()  # calc gradients
+        optimizer.step()  # update gradients
+
 
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))

@@ -17,7 +17,9 @@ class LIF(Module):
         self.dt = dt
 
     def forward(self, input, time):
+
         if time == 1:
+
             self.spike_time_list = None
             self.v_current = None
             self.gamma = None

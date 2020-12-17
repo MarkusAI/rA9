@@ -34,6 +34,9 @@ class BackwardFunction(object):
             grads = grad_outputs
             gamma = grads
 
+
+
+
         elif id == "LIF":
             grads = np_fn(grad_outputs, *np_args)
             grads = jnp.where(grads == jnp.inf, 0, grads)
@@ -41,7 +44,9 @@ class BackwardFunction(object):
 
         elif id == "Linear":
 
+
             grads = np_fn(grad_outputs,np_args)
+
 
         else:
             if (len(np_args[0].shape)) == 4:
