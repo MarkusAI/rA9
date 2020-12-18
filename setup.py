@@ -16,7 +16,7 @@ setup(
     ],
 
     install_requires=[
-        "jax>=0.2.7",
+        "jax>=0.2.0",
         "jaxlib>=0.1.55",
         "future>=0.18.2",
         "h5py>=2.3.0",

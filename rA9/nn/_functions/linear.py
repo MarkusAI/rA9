@@ -15,6 +15,7 @@ class Linear(Function):
         def np_fn(input_np, weights_np):
             out = jnp.matmul(input_np, weights_np)
             return out
+
         np_args = (input.data, weight.data.T)
         id = "Linear"
 
