@@ -32,14 +32,6 @@ def excute(fn, grad_in=None):
 
                 if fn.variable.grad is None:
                     fn.variable.grad = jnp.zeros(fn.variable.data.shape)
-                if len(grad_in.shape) != 4:
-                    if len(fn.variable.grad.shape) == 4:
-                        gamma = gammapops(grad_in, fn.variable.data.shape[0])
-                        grad_in = jnp.matmul(gamma, grad_in)
-                        grad_in = grad_in.reshape(fn.variable.grad.shape)
-                    else:
-                        gamma = linearpops()
-                        grad_in = jnp.matmul(gamma.T, grad_in)
 
                 grad_in = jnp.where(grad_in == jnp.inf, 0, grad_in)
                 grad_in = jnp.nan_to_num(grad_in, copy=False)

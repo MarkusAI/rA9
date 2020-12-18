@@ -24,7 +24,6 @@ class Output(Function):
 
         grad_np_args = (time_step )
 
-
         id = "output"
         return grad_fn, grad_np_args, out, v_current, id
 
