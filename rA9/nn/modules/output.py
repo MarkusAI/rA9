@@ -6,7 +6,7 @@ from rA9.autograd.variable import Variable
 
 class Output(Module):
 
-    def __init__(self, tau_m=0.1, dt=1, Vth=1):
+    def __init__(self, tau_m=100, dt=1, Vth=1):
         super(Output, self).__init__()
         self.v_current = None
         self.tau_m = tau_m
