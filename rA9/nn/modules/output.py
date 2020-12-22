@@ -17,7 +17,7 @@ class Output(Module):
 
     def forward(self, input, time):
         if time == 1:
-            self.v_current = Variable(jnp.zeros(shape=(1,input.data.shape[1:]))
+            self.v_current = Variable(jnp.zeros(shape=(1,input.data.shape[1:])))
 
         out, v_current_ret = F.Output(input=input,
                                       v_current=self.v_current,
