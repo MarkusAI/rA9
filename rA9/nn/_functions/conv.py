@@ -60,7 +60,6 @@ def conv_backward(X, W, X_col, stride=1, padding=0):
 
     W_col = W.reshape(n_filter, -1)
     dx_col = jnp.matmul(W_col.T, dout_reshaped)
-
     dW = dout_reshaped
 
     newshape = (n_x, v, h_out, w_out)
