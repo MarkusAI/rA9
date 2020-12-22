@@ -7,3 +7,4 @@ from .img2col import *
 from .dropout import *
 from .pooling import *
 from .activation import *
+from .input import *

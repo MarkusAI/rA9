@@ -20,9 +20,11 @@ class Linear(Function):
         id = "Linear"
 
         def grad_fn(grad_outputs, weight):
-            grad = jnp.matmul(grad_outputs, weight)
-            weights = jnp.matmul(grad_outputs, weight)
+            weights = grad_outputs
+            grad = jnp.transpose(jnp.matmul(weight.T, grad_outputs.T))
+
             return (grad, weights)
+
         grad_args = (weight.data)
         return grad_fn, grad_args, jit(np_fn)(*np_args), id
 

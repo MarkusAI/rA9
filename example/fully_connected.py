@@ -13,6 +13,7 @@ import jax.numpy as jnp
 class SNN(Module):
     def __init__(self):
         super(SNN, self).__init__()
+        self.input = nn.Input()
         self.fc1 = nn.Linear(in_features=784, out_features=500)
         self.active1 = nn.LIF()
         self.fc2 = nn.Linear(in_features=500, out_features=150)
@@ -23,10 +24,11 @@ class SNN(Module):
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time):
+        x = self.input(x,time)
         x = self.active1(self.fc1(x), time)
         x = self.active2(self.fc2(x), time)
         x = self.active3(self.fc3(x), time)
-        return self.output(self.fc4(x), time)
+        return self.output(self.fc4(x),time)
 
 
 model = SNN()
@@ -49,7 +51,7 @@ for i in range(15):
     for i, (image, label) in enumerate(train_loader):
         label = Variable(label)
         for t, j in enumerate(Pencoder.Encoding(image)):
-            image = Variable(j)
+            image = Variable(j,requires_grad=True)
             t = t + 1
             output = model(image, t)
         optimizer.zero_grad()
