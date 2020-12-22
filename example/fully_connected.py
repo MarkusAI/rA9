@@ -21,7 +21,7 @@ class SNN(Module):
         self.fc3 = nn.Linear(in_features=150, out_features=50)
         self.active3 = nn.LIF()
         self.fc4 = nn.Linear(in_features=50, out_features=10)
-        self.output = nn.Output(out_features=10)
+        self.output = nn.Output()
 
     def forward(self, x, time):
         x = self.input(x,time)
