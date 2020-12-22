@@ -13,10 +13,6 @@ def conv2d(input, weights, stride=1, padding=0):
     return _functions.Conv2d.apply(input, weights, stride, padding)
 
 
-def Input(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma):
-    return _functions.Input.apply(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma)
-
-
 def Output(input, v_current, tau_m, dt, time_step):
     return _functions.Output.apply(input, v_current, tau_m, dt, time_step)
 

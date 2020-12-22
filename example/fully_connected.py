@@ -54,8 +54,8 @@ for i in range(15):
             image = Variable(j,requires_grad=True)
             t = t + 1
             output = model(image, t)
-        optimizer.zero_grad()
-        loss = F.Spikeloss(output, label, PeDurx)
-        print(loss.data)
-        loss.backward()
-        optimizer.step()
+    optimizer.zero_grad()
+    loss = F.Spikeloss(output, label, PeDurx)
+    print(loss.data)
+    loss.backward()
+    optimizer.step()
