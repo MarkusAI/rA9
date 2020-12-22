@@ -22,7 +22,7 @@ class Output(Module):
         out, v_current_ret = F.Output(input=input,
                                       v_current=self.v_current,
                                       tau_m=self.tau_m, dt=self.dt,
-                                      time_step=time+1)
+                                      time_step=time)
         self.v_current = v_current_ret
         return out
     def reset_parameters(self):
