@@ -15,6 +15,7 @@ import os
 class SNN(Module):
     def __init__(self):
         super(SNN, self).__init__()
+        self.input = nn.Input()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=10, kernel_size=5)
         self.active1 = nn.LIF()
         self.conv2 = nn.Conv2d(in_channels=10, out_channels=20, kernel_size=5)
@@ -33,6 +34,7 @@ class SNN(Module):
         self.output = nn.Output(out_features=10)
 
     def forward(self, x, time):
+        x = self.input(x,time)
         x = self.active1(self.conv1(x), time)
         x = self.active2(self.pool1(x), time)
         x = self.active3(self.conv2(x), time)
@@ -68,6 +70,7 @@ for epoch in range(15):
         for j, q in enumerate(encoder.Encoding(data)):
             pdata = Variable(q, requires_grad=True)
             output, v_current = model(pdata, j+1)
+
             for k, v in enumerate(v_current):
                 os.makedirs(f"image/{str(k + 1)}", exist_ok=True)
                 if k < 4:
@@ -77,7 +80,6 @@ for epoch in range(15):
             optimizer.zero_grad()
             loss = F.Spikeloss(output, target, time_step=PeDurx)
             loss.backward()  # calc gradients
-
             optimizer.step()  # update gradients
 
         print("Epoch:" + str(epoch) + " Time: " + str(i) + " loss: " + str(loss.data))

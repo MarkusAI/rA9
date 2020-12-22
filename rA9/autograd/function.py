@@ -32,7 +32,6 @@ class BackwardFunction(object):
         elif id == "output":
 
             grads = grad_outputs
-            gamma = grads
 
         elif id == "LIF":
             grads = np_fn(grad_outputs, *np_args)

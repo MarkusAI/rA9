@@ -27,3 +27,6 @@ def pooling(input, size, weights, stride):
 
 def LIF(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma):
     return _functions.LIF.apply(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma)
+
+def Input(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma):
+    return _functions.Input.apply(input, v_current, tau_m, Vth, dt, s_time_list, time, gamma)
