@@ -53,6 +53,7 @@ def excute(fn, grad_in=None):
 
                 grad_in = jnp.where(grad_in == jnp.inf, 0, grad_in)
                 grad_in = jnp.nan_to_num(grad_in, copy=False)
+                grad_in = jnp.where(grad_in < 0, 0, grad_in)
                 fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
 
             return
