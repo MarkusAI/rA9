@@ -16,7 +16,7 @@ class Linear(Module):
     def reset_parameters(self):
         size = self.weight.data.shape
         stdv = jnp.sqrt(self.reskey/size[1])
-        self.weight.normal(mean=10, stdv=stdv)
+        self.weight.normal(mean=7.5, stdv=stdv)
 
     def forward(self, input):
         out = F.linear(input=input, weights=self.weight)
