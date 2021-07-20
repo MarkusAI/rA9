@@ -1,5 +1,3 @@
-from rA9.autograd import Function
-from rA9.autograd import Variable
 from jax import numpy as jnp
 from .module import Module
 from ..parameter import Parameter
@@ -23,7 +21,7 @@ class Conv2d(Module):
             n *= k # Need to solve this part as JAX function
         stdv = jnp.sqrt(self.reskey/n)
 
-        self.weight.uniform(-stdv, stdv)
+        self.weight.normal(mean=10, stdv=stdv)
 
     def forward(self, input):
         out = F.conv2d(input=input, weights=self.weight, stride=self.stride, padding=self.padding)
