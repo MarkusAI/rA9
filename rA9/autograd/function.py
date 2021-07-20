@@ -1,6 +1,4 @@
-from jax import jit, grad, vjp
 from rA9.autograd.variable import *
-from rA9.autograd.LIF_grad import *
 
 
 def with_metaclass(meta, *bases):

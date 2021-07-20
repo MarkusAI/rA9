@@ -8,7 +8,6 @@ class Output(Module):
 
     def __init__(self, tau_m=100, dt=1, Vth=1):
         super(Output, self).__init__()
-        self.v_current = None
         self.tau_m = tau_m
         self.Vth = Vth
         self.dt = dt

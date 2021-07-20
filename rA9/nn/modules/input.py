@@ -8,9 +8,6 @@ class Input(Module):
 
     def __init__(self, tau_m=100, Vth=1, dt=1):
         super(Input, self).__init__()
-        self.spike_time_list = None
-        self.v_current = None
-        self.gamma = None
         self.tau_m = tau_m
         self.time_step = 1
         self.Vth = Vth
@@ -18,9 +15,6 @@ class Input(Module):
 
     def forward(self, input, time):
         if time == 1:
-            self.spike_time_list = None
-            self.v_current = None
-            self.gamma = None
             self.v_current = Variable(jnp.zeros(shape=input.data.shape))
             self.gamma = Variable(jnp.zeros(shape=input.data.shape))
             self.spike_time_list = Variable(jnp.zeros(shape=input.data.shape))
