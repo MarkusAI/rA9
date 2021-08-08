@@ -21,7 +21,7 @@ class Conv2d(Module):
             n *= k # Need to solve this part as JAX function
         stdv = jnp.sqrt(self.reskey/n)
 
-        self.weight.normal(mean=5.6, stdv=stdv)
+        self.weight.normal(mean=0.0, stdv=stdv)
 
     def forward(self, input):
         out = F.conv2d(input=input, weights=self.weight, stride=self.stride, padding=self.padding)
