@@ -11,10 +11,12 @@ class Output(Module):
         self.tau_m = tau_m
         self.Vth = Vth
         self.dt = dt
-        self.v_current = Variable(jnp.zeros(shape=input.data.shape))
+        
         self.reset_parameters()
 
     def forward(self, input, time):
+        if time == 0:
+            self.v_current = Variable(jnp.zeros(shape=input.data.shape))
         out, v_current_ret = F.Output(input=input,
                                       v_current=self.v_current,
                                       tau_m=self.tau_m, dt=self.dt,
