@@ -5,7 +5,7 @@ from rA9.autograd import Variable
 
 
 class Output(Function):
-    id = "output"
+    id = "Output"
 
     @staticmethod
     def forward(ctx, input, v_current, tau_m, dt, time_step):
@@ -24,7 +24,7 @@ class Output(Function):
 
         grad_np_args = (time_step )
 
-        id = "output"
+        id = "Output"
         return grad_fn, grad_np_args, out, v_current, id
 
     @staticmethod
