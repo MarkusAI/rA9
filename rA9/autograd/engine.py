@@ -54,7 +54,10 @@ def excute(fn, grad_in=None):
                 grad_in = jnp.where(grad_in == jnp.inf, 0, grad_in)
                 grad_in = jnp.nan_to_num(grad_in, copy=False)
                 grad_in = jnp.where(grad_in < 0, 0, grad_in)
-                fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
+                if fn.variable.id == None:
+                    pass
+                else:
+                    fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
 
             return
         grad_outs, gamma = fn.apply(grad_in)
@@ -64,7 +67,6 @@ def excute(fn, grad_in=None):
 
         if type(grad_outs) is not tuple:
             grad_outs = (grad_outs,)
-
         for i, next_func in enumerate(fn.next_functions):
             excute(next_func, grad_outs[i])
 
