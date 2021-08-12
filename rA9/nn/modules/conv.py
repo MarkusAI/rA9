@@ -4,14 +4,14 @@ from ..parameter import Parameter
 from .. import functional as F
 
 class Conv2d(Module):
-    def __init__(self, in_channels, out_channels, kernel_size,reskey=2.0):
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, reskey=2.0):
         super(Conv2d, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.kernel_size = (kernel_size, kernel_size)
         self.weight = Parameter(jnp.zeros((out_channels, in_channels) + self.kernel_size))
-        self.stride = 1
-        self.padding = 0
+        self.stride = stride
+        self.padding = padding
         self.reskey = reskey
         self.reset_parameters()
 
