@@ -7,9 +7,8 @@ import array
 import struct
 import numpy as np
 import jax.numpy as jnp
+from rA9.utils.data import Dataset
 from urllib.request import urlretrieve
-from rA9.utils.encoding import PoissonEncoder
-from rA9.utils.data import DataLoader, Dataset
 from future.standard_library import install_aliases
 
 install_aliases()
