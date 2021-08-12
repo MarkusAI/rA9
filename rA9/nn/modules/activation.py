@@ -15,7 +15,7 @@ class LIF(Module):
         
 
     def forward(self, input, time):
-        if time == 0:
+        if time == 1:
             self.v_current = Variable(jnp.zeros(shape=input.data.shape))
             self.gamma = Variable(jnp.zeros(shape=input.data.shape))
             self.spike_time_list = Variable(jnp.zeros(shape=input.data.shape))
