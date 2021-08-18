@@ -1,3 +1,4 @@
+from jax._src.api import grad
 from rA9.autograd.variable import *
 
 
@@ -26,9 +27,10 @@ class BackwardFunction(object):
         id = ctx.id
         if id == "Spikeloss":
             grads = np_fn(*np_args)
-
-        elif id == "output":
-
+        
+        elif id == "Input":
+            grads = 0
+        elif id == "Output":
             grads = grad_outputs
 
         elif id == "LIF":
@@ -117,7 +119,7 @@ class Function(with_metaclass(FunctionMeta)):
 
     @classmethod
     def apply(cls, *args):
-        if getattr(cls(), 'id') == 'output':
+        if getattr(cls(), 'id') == 'Output':
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
             np_fn, np_args, output, v_current, id = cls.forward(grad_fn, *args)
@@ -134,6 +136,12 @@ class Function(with_metaclass(FunctionMeta)):
 
             return Variable(data=output, requires_grad=True, grad_fn=grad_fn, id=id), \
                    Variable(data=v_current), Variable(data=gamma), Variable(data=spike_time_list)
+        elif getattr(cls(), 'id') == 'Input':
+            backward_cls = cls()._backward_cls
+            grad_fn = backward_cls()
+            output, id = cls.forward(grad_fn, *args)
+            
+            return Variable(data=output, requires_grad=False, id=id)
         else:
             backward_cls = cls()._backward_cls
             grad_fn = backward_cls()
