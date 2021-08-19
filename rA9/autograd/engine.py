@@ -18,13 +18,13 @@ def excute(fn, grad_in=None):
 
                 if fn.variable.grad is None:
                     fn.variable.grad = jnp.zeros(fn.variable.data.shape)
-                gamma = gamma_stack.pop()
-                
+           
+              
                 if fn.variable.id == None:
                     pass
                 else:
-                    fn.variable.grad = index_add(fn.variable.grad, index[:], grad_in)
-                    fn.variable.grad = gamma @ fn.variable.grad
+                    gamma = gamma_stack.pop()
+                    fn.variable.grad = index_add(fn.variable.grad, index[:], gamma * grad_in.T)
 
             return
         grad_outs, gamma = fn.apply(grad_in)
