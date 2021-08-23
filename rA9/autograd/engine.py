@@ -9,7 +9,7 @@ gamma_stack = []
 
 
 
-def excute(fn, grad_in=None):
+def execute(fn, grad_in=None):
     if fn is not None:
 
         if isinstance(fn, AccumulateGrad):
@@ -35,7 +35,7 @@ def excute(fn, grad_in=None):
         if type(grad_outs) is not tuple:
             grad_outs = (grad_outs,)
         for i, next_func in enumerate(fn.next_functions):
-            excute(next_func, grad_outs[i])
+            execute(next_func, grad_outs[i])
 
 
 def backward(variables):
@@ -43,4 +43,4 @@ def backward(variables):
 
     for variable in variables:
         if variable.grad_fn is not None:
-            excute(variable.grad_fn)
+            execute(variable.grad_fn)
