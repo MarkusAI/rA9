@@ -11,7 +11,7 @@ class Input(Function):
         assert isinstance(input, Variable)
 
         def np_fn(input_np):
-            return jnp.where(input_np>(0.5+np.random.randn(*input_np.shape)), 1, 0)
+            return jnp.where(input_np > np.random.rand(*input_np.shape), 1, 0)
         id = "Input"
         return np_fn(input.data), id 
     
