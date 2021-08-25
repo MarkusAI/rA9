@@ -19,23 +19,20 @@ But you can run this library in [WSL](https://docs.microsoft.com/en-us/windows/w
 
 #### CPU
 Simple, just type 
-> pip install rA9
+> pip install git+https://github.com/MarkusAI/rA9
 #### GPU
-MacOS does not support Nvidia CUDA accelerating. 
+MacOS does not support NVIDIA CUDA. 
 ### Linux
 
 #### CPU
 Simple, just type 
-> pip install rA9
+> pip install git+https://github.com/MarkusAI/rA9
 #### GPU
 You need to setup JAX before installing the rA9 as [GPU-dedicated](https://github.com/google/jax#pip-installation)
 and install rA9 as following:
-> pip install rA9
-### Specific
-#### TPU
-
-It also supports TPU in [google colab](https://colab.research.google.com/)
+> pip install git+https://github.com/MarkusAI/rA9
 
 ### Example
-
+ 
+Check LeNet.py in example
 
